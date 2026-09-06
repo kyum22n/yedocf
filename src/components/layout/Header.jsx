@@ -9,18 +9,7 @@ const Header = () => {
     const { user, loading, logoutUser } = useUser();
 
     const handleLogout = () => {
-        sessionStorage.removeItem("accessToken");
-        sessionStorage.removeItem("uId");
-        sessionStorage.removeItem("role");
-        sessionStorage.removeItem("aId");
-        logoutUser(null);
-
-        // 소셜 로그아웃 추가 처리 (리디렉션 방식으로 할 수 있는 경우만)
-        if (provider === "google") {
-            // 서버에 토큰 revoke 또는 추가 처리하는 API가 있다면 여기에 axios.post() 가능
-            console.log("Google 사용자 로그아웃 완료 (로컬 정리만 수행)");
-        }
-
+        logoutUser();
         navigate('/');
     };
 

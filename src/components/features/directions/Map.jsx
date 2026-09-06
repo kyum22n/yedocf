@@ -21,8 +21,6 @@ script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${import.meta.env.VITE_KAKA
       });
     };
     document.head.appendChild(script);
-    console.log("카카오 키:", import.meta.env.VITE_KAKAO_API_KEY);
-
   }, []);
 
   return <div id="map" className="w-full h-[400px] rounded-lg shadow-md" />;

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
+import axiosInstance from "@/api/axiosInstance";
 
 const UserContext = createContext(null);
 
@@ -13,17 +13,13 @@ export const UserProvider = ({ children }) => {
     const aId = sessionStorage.getItem("aId");
     const role = sessionStorage.getItem("role");
 
-    console.log("[UserProvider] 복원 시도: ", { token, uId, aId, role });
-
     if (!token) {
-      console.log("[UserProvider] 토큰 없음 → 비로그인 처리");
       setLoading(false);
       return;
     }// 토큰 없으면 아무것도 하지 않음
 
     // 관리자 먼저 확인 (우선순위 높임)
     if (aId && role) {
-      console.log("[UserProvider] 관리자 로그인 복원됨");
       setUser({
         id: aId,
         name: null,
@@ -37,15 +33,9 @@ export const UserProvider = ({ children }) => {
 
     // 일반 사용자 처리
     if (uId) {
-      console.log("[UserProvider] 일반 사용자 로그인 복원 시도");
-      axios
-        .get(`/api/user/myinfo`, { // {uId}부분을 myinfo로 변경함 => token 에서 uId 추출해서 "그 사용자 정보"만 반환 -> 보안 상 URL 노출 방지 목적
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+      axiosInstance
+        .get(`/api/user/myinfo`) // token에서 uId 추출해서 "그 사용자 정보"만 반환 -> 보안 상 URL 노출 방지 목적
         .then((res) => {
-          console.log("[UserProvider] 사용자 이름 가져오기 성공:", res.data.uName);
           const uName = res.data.uName;
           setUser({
             id: uId,

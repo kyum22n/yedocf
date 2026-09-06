@@ -12,7 +12,7 @@ import DirectionsMap from '@/components/features/directions/DirectionsMap';
 import Spacer from '@/components/common/Spacer';
 import { banner5 } from '@/assets/cdnImages';
 import { useState } from "react";
-import axios from "axios";
+import axiosInstance from "@/api/axiosInstance";
 
 const InquiryPage = () => {
 
@@ -39,8 +39,6 @@ const InquiryPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // 토큰 저장
-        const token = sessionStorage.getItem("accessToken");
         const uId = sessionStorage.getItem("uId");
 
         if (!form.uName || !form.uEmail || !form.qContent) {
@@ -50,16 +48,12 @@ const InquiryPage = () => {
 
         try {
             setIsSubmitting(true);
-            await axios.post("/api/inquiry", {
+            await axiosInstance.post("/api/inquiry", {
                 uId,
                 uName: form.uName,
                 uEmail: form.uEmail,
                 visit: form.visit,
                 qContent: form.qContent,
-            }, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
             });
 
             alert("작성하신 문의가 등록되었습니다.");

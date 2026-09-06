@@ -5,13 +5,9 @@ import Spacer from "@/components/common/Spacer";
 import { banner1 } from '@/assets/cdnImages';
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "@/api/axiosInstance";
 
 const SignupPage = () => {
-    
-    // API 기본 URL
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    
     const navigate = useNavigate();
 
     // 사용자 입력값 상태 정의
@@ -137,7 +133,7 @@ const SignupPage = () => {
             setEmailLoading(true); // 로딩 시작
 
             // 이메일로 인증 코드 전송 요청
-            await axios.post("/api/user/send-code", { email: form.email });
+            await axiosInstance.post("/api/user/send-code", { email: form.email });
 
             // 인증번호 입력값 초기화
             setForm((prev) => ({
@@ -175,7 +171,7 @@ const SignupPage = () => {
         if (Object.keys(errors).length > 0) return;
 
         try {
-            await axios.post(`${baseUrl}/api/user/register`, {
+            await axiosInstance.post(`/api/user/register`, {
                 uId: form.userId,
                 uPwd: form.password,
                 uEmail: form.email,
@@ -286,7 +282,7 @@ const SignupPage = () => {
 
                                         try {
                                             // 3. 인증번호 검증 요청 (백엔드)
-                                            const response = await axios.post("/api/user/verify-code", {
+                                            const response = await axiosInstance.post("/api/user/verify-code", {
                                                 email: form.email,
                                                 code: form.emailCertificate,
                                             });

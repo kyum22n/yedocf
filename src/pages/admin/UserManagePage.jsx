@@ -14,7 +14,7 @@ import Button from "@/components/common/Button";
 import Modal from "@/components/common/Modal";
 import { useState } from "react";
 import { useEffect } from "react";
-import axios from "axios";
+import axiosInstance from "@/api/axiosInstance";
 
 
 /**
@@ -32,16 +32,13 @@ const UserManagePage = () => {
   
   // 사용자 목록 API 호출
   useEffect(() => {
-    // 토큰 가져오기
-    const token = sessionStorage.getItem("accessToken");
-
-    axios.get("/api/admin/user/users", {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }).then((res) => {
-      setUsers(res.data);
-    });
+    axiosInstance.get("/api/admin/user/users")
+      .then((res) => {
+        setUsers(res.data);
+      })
+      .catch((error) => {
+        console.error("회원 목록 조회 실패", error);
+      });
   }, []);
 
   // 모달 및 상태 관리
@@ -175,19 +172,12 @@ const UserManagePage = () => {
               const email = document.querySelector("input[name='email']").value;
               const phone = document.querySelector("input[name='phone']").value;
 
-              // 토큰 가져오기
-              const token = sessionStorage.getItem("accessToken");
-
-              const response = await axios.post("/api/admin/user", {
+              const response = await axiosInstance.post("/api/admin/user", {
                 uName: name,
                 uId: username,
                 uPwd: password,
                 uEmail: email,
                 uPhone: phone,
-              }, {
-                headers: {
-                  Authorization: `Bearer ${token}`
-                }
               });
 
               setUsers([...users, response.data]);
@@ -237,14 +227,7 @@ const UserManagePage = () => {
           title="회원 삭제"
           actionLabel="삭제"
           onAction={() => {
-            // 토큰 가져오기
-            const token = sessionStorage.getItem("accessToken");
-
-            axios.post(`/api/admin/user/${selectedUser?.id}`, null, {
-              headers: {
-                Authorization: `Bearer ${token}`
-              }
-            }).then(() => {
+            axiosInstance.post(`/api/admin/user/${selectedUser?.id}`, null).then(() => {
               setUsers(users.filter((user) => user.uId !== selectedUser?.id));
               handleCloseDeleteModal();
             });

@@ -23,3 +23,7 @@ dist/
 
 # ESLint 캐시
 .eslintcache
+
+# Claude Code 런타임 상태 파일 (launch.json은 유지)
+.claude/*.lock
+.claude/scheduled_tasks.lock

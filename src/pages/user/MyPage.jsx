@@ -5,7 +5,7 @@ import Button from "@/components/common/Button";
 import Spacer from "@/components/common/Spacer";
 import { formatDateTime } from "@/constants/dateUtils";
 import { banner2 } from '@/assets/cdnImages';
-import axios from "axios";
+import axiosInstance from "@/api/axiosInstance";
 import { useUser } from "@/contexts/UserProvider";
 import { useNavigate } from "react-router-dom";
 
@@ -48,14 +48,9 @@ const MyPage = () => {
         if (!window.confirm("정말 회원 탈퇴하시겠습니까?")) return;
 
         try {
-            const token = sessionStorage.getItem("accessToken");
             const uId = sessionStorage.getItem("uId");
 
-            await axios.post(`/api/user/Delete/${uId}`, null, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            await axiosInstance.post(`/api/user/Delete/${uId}`, null);
 
             alert("회원 탈퇴가 완료되었습니다.");
             logoutUser(); // 유저 상태 초기화
@@ -84,24 +79,15 @@ const MyPage = () => {
     const [showInquiryModal, setShowInquiryModal] = useState(false); // 문의 내용 상세보기 모달 표시 여부
 
     useEffect(() => {
-
-        const token = sessionStorage.getItem("accessToken");
-        const aId = sessionStorage.getItem("aId");
         const uId = sessionStorage.getItem("uId");
-        const role = sessionStorage.getItem("role");
 
-        if (!uId || !token) {
-            // alert("로그인이 필요합니다. 다시 로그인해주세요.");
+        if (!uId) {
             console.error("로그인 정보가 없습니다.");
             return;
         }
 
         // 예약 내역 불러오기
-        axios.get(`/api/reserve/${uId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        })
+        axiosInstance.get(`/api/reserve/${uId}`)
             .then((response) => {
                 setReservations(response.data);
             })
@@ -110,11 +96,7 @@ const MyPage = () => {
             });
 
         // 사용자 정보 불러오기
-        axios.get(`/api/user/myinfo`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        })
+        axiosInstance.get(`/api/user/myinfo`)
             .then((response) => {
                 setUserInfo(response.data);
             })
@@ -123,11 +105,7 @@ const MyPage = () => {
             });
 
         // 문의 내역 불러오기
-        axios.get('/api/inquiry', {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        })
+        axiosInstance.get('/api/inquiry')
             .then((response) => {
                 setInquiries(response.data);
             })
@@ -223,14 +201,8 @@ const MyPage = () => {
                                                                 variant="secondary"
                                                                 className="text-sm"
                                                                 onClick={async () => {
-                                                                    const token = sessionStorage.getItem("accessToken");
-
                                                                     try {
-                                                                        await axios.post(`/api/reserve/${r.rId}/cancel`, null, {
-                                                                            headers: {
-                                                                                Authorization: `Bearer ${token}`,
-                                                                            },
-                                                                        });
+                                                                        await axiosInstance.post(`/api/reserve/${r.rId}/cancel`, null);
                                                                         alert("예약이 취소되었습니다.");
 
                                                                         // 예약 목록 갱신
@@ -319,21 +291,13 @@ const MyPage = () => {
                     }
 
                     try {
-                        const token = sessionStorage.getItem("accessToken");
                         const uId = sessionStorage.getItem("uId");
 
-                        await axios.post("/api/user/password",
-                            {
-                                uId: uId,
-                                oldPwd: oldPwd,
-                                newPwd: newPwd,
-                            },
-                            {
-                                headers: {
-                                    Authorization: `Bearer ${token}`,
-                                },
-                            }
-                        );
+                        await axiosInstance.post("/api/user/password", {
+                            uId: uId,
+                            oldPwd: oldPwd,
+                            newPwd: newPwd,
+                        });
 
                         alert("비밀번호가 변경되었습니다.");
                         setShowPwdModal(false);
@@ -382,29 +346,16 @@ const MyPage = () => {
                 onAction={async () => {
                     try {
                         const uId = sessionStorage.getItem("uId");
-                        const token = sessionStorage.getItem("accessToken");
 
-                        const response = await axios.post(
-                            "/api/user/phone",
-                            {
-                                uId: uId,
-                                uPhone: newPhone,
-                            },
-                            {
-                                headers: {
-                                    Authorization: `Bearer ${token}`,
-                                },
-                            }
-                        );
+                        await axiosInstance.post("/api/user/phone", {
+                            uId: uId,
+                            uPhone: newPhone,
+                        });
 
                         alert("핸드폰 번호가 변경되었습니다.");
 
                         // 서버에서 최신 userInfo 다시 가져오기 = 실시간 변경
-                        const updatedUserInfo = await axios.get(`/api/user/myinfo`, {
-                            headers: {
-                                Authorization: `Bearer ${token}`,
-                            },
-                        });
+                        const updatedUserInfo = await axiosInstance.get(`/api/user/myinfo`);
 
                         setUserInfo(updatedUserInfo.data);
 

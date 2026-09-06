@@ -7,7 +7,7 @@ import Button from '@/components/common/Button';
 import SocialButton from '@/components/common/SocialButton';
 import { login_side } from '@/assets/cdnImages';
 
-import axios from 'axios';
+import axiosInstance from '@/api/axiosInstance';
 
 const LoginPage = () => {
     // 사용자 입력 상태
@@ -43,7 +43,7 @@ const LoginPage = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('/api/user/login', { uId, uPwd });
+            const response = await axiosInstance.post('/api/user/login', { uId, uPwd });
             const token = response.data.token;
             const userId = response.data.uId;
 
@@ -97,7 +97,7 @@ const LoginPage = () => {
 
         if (!endpoint) return;
 
-        axios.post(endpoint, null, { params: { code } })
+        axiosInstance.post(endpoint, null, { params: { code } })
             .then((res) => {
                 const token = res.data?.accessToken;
                 const userId = res.data?.uId;

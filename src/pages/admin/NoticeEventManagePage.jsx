@@ -15,7 +15,6 @@ import Modal from "@/components/common/Modal";
 import { formatDate, formatDateTime, formatToISODateTime } from "@/constants/dateUtils";
 
 import { useState, useEffect } from "react";
-import axios from "axios";
 import axiosInstance from "@/api/axiosInstance";
 
 const NoticeEventManagePage = () => {
@@ -55,14 +54,15 @@ const NoticeEventManagePage = () => {
   }, []);
 
   const fetchNotices = async () => {
-    const token = sessionStorage.getItem("accessToken");
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-    const res = await axios.get("/api/admin/noticeEvent", config);
-    setNotices(res.data);
+    try {
+      const res = await axiosInstance.get("/api/admin/noticeEvent");
+      setNotices(res.data);
+    } catch (error) {
+      console.error("공지사항/이벤트 목록 조회 실패", error);
+    }
   };
 
   const handleCreateNotice = async () => {
-    const token = sessionStorage.getItem("accessToken");
     await axiosInstance.post("/api/admin/noticeEvent", {
       neTitle: title,
       neContent: content,
@@ -70,7 +70,7 @@ const NoticeEventManagePage = () => {
       neType: type,
       neStartDate: formatToISODateTime(startDate),
       neEndDate: formatToISODateTime(endDate),
-    }, { headers: { Authorization: `Bearer ${token}` } });
+    });
 
     await fetchNotices();
     setIsModalOpen(false);
@@ -78,24 +78,17 @@ const NoticeEventManagePage = () => {
   };
 
   const handleUpdateNotice = async () => {
-
-    const token = sessionStorage.getItem("accessToken");
-
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-    await axios.put(`/api/admin/noticeEvent/${selectedNotice.neId}`, {
+    await axiosInstance.put(`/api/admin/noticeEvent/${selectedNotice.neId}`, {
       ...selectedNotice,
       neStartDate: formatToISODateTime(selectedNotice.neStartDate),
       neEndDate: formatToISODateTime(selectedNotice.neEndDate),
-    },config);
+    });
     await fetchNotices();
     setIsEditModalOpen(false);
   };
 
   const handleDeleteNotice = async () => {
-
-    const token = sessionStorage.getItem("accessToken");
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-    await axios.delete(`/api/admin/noticeEvent/${selectedNotice.neId}`, config);
+    await axiosInstance.delete(`/api/admin/noticeEvent/${selectedNotice.neId}`);
     await fetchNotices();
     setIsDeleteModalOpen(false);
   };

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "@/api/axiosInstance";
+import { useUser } from "@/contexts/UserProvider";
 
 import SidebarMinimal from "@/components/admin/SidebarMinimal";
 import InputField from "@/components/common/InputField";
@@ -20,6 +21,7 @@ import Modal from "@/components/common/Modal";
 
 const AdminLoginPage = () => {
   const navigate = useNavigate();
+  const { loginUser } = useUser();
 
   // 로그인 상태 자동 리다이렉트 로직 구현
   useEffect(() => { 
@@ -55,7 +57,7 @@ const AdminLoginPage = () => {
 
     // 로그인
     try {
-      const response = await axios.post("/api/admin/login", {
+      const response = await axiosInstance.post("/api/admin/login", {
         aId: form.username,
         aPwd: form.password,
         }
@@ -73,10 +75,12 @@ const AdminLoginPage = () => {
         throw new Error("로그인 실패 : 관리자 권한이 없습니다.");
       }
 
-      // sessionStorage에 토큰 저장
-      sessionStorage.setItem("accessToken", token);
-      sessionStorage.setItem("role", role);
-      sessionStorage.setItem("aId", form.username);
+      loginUser({
+        id: form.username,
+        token,
+        role,
+        type: "admin",
+      });
 
       // 로그인 성공 후 대시보드로 이동
       navigate("/admin");
@@ -92,7 +96,7 @@ const AdminLoginPage = () => {
   // 아이디 찾기
   const handleFindId = async () => {
     try {
-      const response = await axios.post("/api/admin/find_id", null, {
+      const response = await axiosInstance.post("/api/admin/find_id", null, {
         params: { aEmail: email },
       });
       setFoundId(response.data.aId);
@@ -106,7 +110,7 @@ const AdminLoginPage = () => {
   // 비밀번호 찾기
   const handleFindPwd = async () => {
     try {
-      const response = await axios.post("/api/admin/find_password", null, {
+      const response = await axiosInstance.post("/api/admin/find_password", null, {
         params: { aId, aEmail: email },
       });
       setFoundPwd(response.data.aPwd);

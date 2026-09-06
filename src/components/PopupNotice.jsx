@@ -1,11 +1,5 @@
 import React, { useEffect, useState } from "react";
-import originAxios from "axios";
-
-const publicAxios = originAxios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  withCredentials: true,
-  headers: { "Content-Type": "application/json" },
-});
+import axiosInstance from "@/api/axiosInstance";
 
 const PopupNotice = () => {
   const [popupNotices, setPopupNotices] = useState([]);
@@ -23,7 +17,7 @@ const PopupNotice = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await publicAxios.get(`/api/noticeEvent`);
+        const response = await axiosInstance.get(`/api/noticeEvent`);
         const hiddenIds = getHiddenPopups();
 
         const popupItems = response.data.filter(

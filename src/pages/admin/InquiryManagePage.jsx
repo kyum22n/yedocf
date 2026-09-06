@@ -11,7 +11,7 @@ import Sidebar from "@/components/admin/Sidebar";
 import Modal from "@/components/common/Modal";
 import { formatDateTime } from "@/constants/dateUtils";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import axiosInstance from "@/api/axiosInstance";
 
 const InquiryManagePage = () => {
     // 상태 관리
@@ -23,12 +23,7 @@ const InquiryManagePage = () => {
     // 문의 목록 조회
     const fetchInquiries = async () => {
         try {
-            const token = sessionStorage.getItem("accessToken");
-            const response = await axios.get("/api/admin/inquiry", {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            const response = await axiosInstance.get("/api/admin/inquiry");
             setInquiries(response.data);
         } catch (error) {
             console.error("문의 목록 불러오기 실패", error);
@@ -43,14 +38,10 @@ const InquiryManagePage = () => {
     // 문의 답변 핸들러
     const handleAnswerSubmit = async () => {
         try {
-            const token = sessionStorage.getItem("accessToken");
-            await axios.post(`/api/admin/inquiry/${selectedInquiry.qId}/answer`, {
+            await axiosInstance.post(`/api/admin/inquiry/${selectedInquiry.qId}/answer`, {
                 qAnswer: qAnswer
-            }, {
-                headers: {Authorization: `Bearer ${token}`},
             });
 
-            console.log("토큰:", token);
             alert("답변이 등록되었습니다.");
             setIsModalOpen(false);
             setQAnswer("");

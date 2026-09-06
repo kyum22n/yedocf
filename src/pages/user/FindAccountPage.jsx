@@ -7,12 +7,9 @@ import Spacer from "@/components/common/Spacer";
 // 추가함 / import useState, Modal, axios
 import React, { useState } from 'react';
 import Modal from "@/components/common/Modal"; // Modal import 추가
-import axios from "axios"; // axios import
+import axiosInstance from "@/api/axiosInstance";
 
 const FindAccountPage = () => {
-    // API 기본 URL
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-
     // 아이디 찾기용 state
     const [email, setEmail] = useState(""); // 아이디 찾기용 이메일 입력값
     const [foundId, setFoundId] = useState(""); // 아이디 찾기 결과 저장용
@@ -30,8 +27,7 @@ const FindAccountPage = () => {
         }
 
         try {
-            const response = await axios.post(`${baseUrl}/api/user/find_id`, { uEmail: email });
-            console.log("아이디 찾기 응답:", response.data);
+            const response = await axiosInstance.post(`/api/user/find_id`, { uEmail: email });
             setFoundId(response.data);
             setShowModal(true);
         } catch (error) {
@@ -47,11 +43,10 @@ const FindAccountPage = () => {
         }
 
         try {
-            const response = await axios.post(`${baseUrl}/api/user/find_password`, {
+            const response = await axiosInstance.post(`/api/user/find_password`, {
                 uId: id
             });
 
-            console.log("임시 비밀번호:", response.data);
             setFoundPassword(response.data);
             setShowModal(true);
         } catch (error) {

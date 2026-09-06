@@ -14,7 +14,7 @@ import Button from "@/components/common/Button";
 import Modal from "@/components/common/Modal";
 import TimeSelectorSelect from "@/components/admin/TimeSelectorSelect";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import axiosInstance from "@/api/axiosInstance";
 
 /**
  * packageName    : src.api.noticeEvent
@@ -65,64 +65,47 @@ const ReservationManagePage = () => {
   const selectedLabel = searchOptions.find((opt) => opt.value === searchCategory)?.label;
 
   useEffect(() => {
-    // 토큰 가져오기
-    const token = sessionStorage.getItem("accessToken");
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
     // API 호출해서 예약 목록 가져오기
-    axios.get("/api/admin/reserve/reserves", config).then((res) => {
-      // rId로 키 명시
-      const mapped = res.data.map((r) => ({
-        ...r,
-        rId: r.rId,
-      }));
-      setReservations(mapped);
-    });
+    axiosInstance.get("/api/admin/reserve/reserves")
+      .then((res) => {
+        // rId로 키 명시
+        const mapped = res.data.map((r) => ({
+          ...r,
+          rId: r.rId,
+        }));
+        setReservations(mapped);
+      })
+      .catch((error) => {
+        console.error("예약 목록 조회 실패", error);
+      });
   }, []);
 
   const handleStatusChange = (rId, status) => {
-    // 토큰 가져오기
-    const token = sessionStorage.getItem("accessToken");
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
     // API 호출해서 예약 상태 변경
-    axios
-      .post(`/api/admin/reserve/${rId}/status`, { status }, config)
+    axiosInstance
+      .post(`/api/admin/reserve/${rId}/status`, { status })
       .then(() => {
         setReservations(
           reservations.map((r) => (r.rId === rId ? { ...r, status } : r))
         );
+      })
+      .catch((error) => {
+        console.error("예약 상태 변경 실패", error);
       });
   };
 
   const handleDeleteReservation = () => {
-    // 토큰 가져오기
-    const token = sessionStorage.getItem("accessToken");
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
     // API 호출해서 예약 삭제
-    axios
-      .post(`/api/admin/reserve/delete/${selectedReservation.rId}`, {}, config)
+    axiosInstance
+      .post(`/api/admin/reserve/delete/${selectedReservation.rId}`, {})
       .then(async () => {
         // 예약 목록 업데이트
-        const res = await axios.get("/api/admin/reserve/reserves", config);
+        const res = await axiosInstance.get("/api/admin/reserve/reserves");
         setReservations(res.data);
         setIsDeleteModalOpen(false);
       })
       .catch((error) => {
-        console.log("예약 삭제 실패: ", error);
+        console.error("예약 삭제 실패: ", error);
       });
   };
 
@@ -235,7 +218,6 @@ const ReservationManagePage = () => {
                       <Button
                         variant="danger"
                         onClick={() => {
-                          console.log("선택된 예약:", r);
                           setSelectedReservation(r);
                           setIsDeleteModalOpen(true);
                         }}
@@ -260,14 +242,7 @@ const ReservationManagePage = () => {
           resetOnClose={true}
           onAction={async () => {
             try {
-              const token = sessionStorage.getItem("accessToken");
-              const config = {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              };
-
-              const response = await axios.post(
+              await axiosInstance.post(
                 "/api/admin/reserve",
                 {
                   uId: userId,
@@ -275,14 +250,11 @@ const ReservationManagePage = () => {
                   consultDate: selectedDate,
                   consultTime: selectedTime,
                   status: status,
-                },
-                config
+                }
               );
 
-              console.log("예약 추가 성공: ", response.data);
-
               // 예약 목록 업데이트
-              const res = await axios.get("/api/admin/reserve/reserves", config);
+              const res = await axiosInstance.get("/api/admin/reserve/reserves");
               setReservations(res.data);
               setIsModalOpen(false);
               resetForm();
@@ -373,24 +345,16 @@ const ReservationManagePage = () => {
           resetOnClose={true}
           onAction={async () => {
             try {
-              const token = sessionStorage.getItem("accessToken");
-
-              const config = {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              };
-
-              await axios.post(`/api/admin/reserve/${selectedReservation.rId}`, {
+              await axiosInstance.post(`/api/admin/reserve/${selectedReservation.rId}`, {
                 rId: selectedReservation.rId,
                 uId: selectedReservation.uId,
                 tName: selectedReservation.tName,
                 consultDate: selectedReservation.consultDate,
                 consultTime: selectedReservation.consultTime,
                 status: selectedReservation.status,
-              }, config);
+              });
 
-              const updatedList = await axios.get("/api/admin/reserve/reserves", config);
+              const updatedList = await axiosInstance.get("/api/admin/reserve/reserves");
               setReservations(updatedList.data);
               setIsEditModalOpen(false);
             } catch (err) {

@@ -13,7 +13,7 @@ import Dropdown from "@/components/common/Dropdown";
 import Button from "@/components/common/Button";
 import Modal from "@/components/common/Modal";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import axiosInstance from "@/api/axiosInstance";
 
 
 const StaffManagePage = () => {
@@ -22,12 +22,7 @@ const StaffManagePage = () => {
     
     const fetchStaff = async () => {
         try {
-            const token = sessionStorage.getItem("accessToken");
-            const response = await axios.get("/api/admin/staff", {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                },
-            });
+            const response = await axiosInstance.get("/api/admin/staff");
             setStaffList(response.data);
             
         } catch (error) {
@@ -162,23 +157,20 @@ const StaffManagePage = () => {
                     resetOnClose={true}
                     onAction={async () => {
                         try {
-                            const token = sessionStorage.getItem("accessToken");
-                            await axios.post("/api/admin/staff", {
+                            await axiosInstance.post("/api/admin/staff", {
                                 aId: form.aId,
                                 aPwd: form.aPwd,
                                 aEmail: form.aEmail,
                                 role: form.role,
                                 createdBy: "SUPERADMIN",
-                            }, {
-                                headers: {Authorization: `Bearer ${token}`},
                             });
 
                             alert("직원 등록이 완료되었습니다.");
                             setIsModalOpen(false);
                             fetchStaff(); // 직원 목록 새로고침
-                            
+
                         } catch (error) {
-                            console.log("직원 등록이 실패했습니다.", error);
+                            console.error("직원 등록이 실패했습니다.", error);
                             alert("직원 등록이 실패했습니다. 다시 시도해주세요.");
                         }
                     }}
@@ -239,12 +231,7 @@ const StaffManagePage = () => {
                     actionLabel="삭제"
                     onAction={ async () => {
                         try {
-                            const token = sessionStorage.getItem("accessToken");
-                            await axios.delete(`/api/admin/staff/${selectedUser.aId}`, {
-                                headers: {
-                                    Authorization: `Bearer ${token}`,
-                                },
-                            });
+                            await axiosInstance.delete(`/api/admin/staff/${selectedUser.aId}`);
 
                             alert("직원 삭제가 완료되었습니다.");
                             handleCloseDeleteModal();

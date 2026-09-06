@@ -11,6 +11,7 @@ import { Routes, Route } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
 import { useLocation } from "react-router-dom";
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 import LoginPage from '@/pages/user/LoginPage';
 import SignupPage from '@/pages/user/SignupPage';
@@ -39,8 +40,8 @@ const UserLayout = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/idpwfind" element={<FindAccountPage />} />
-        <Route path="/mypage" element={<MyPage />} />
-        <Route path="/reservation" element={<ReservationPage />} />
+        <Route path="/mypage" element={<ProtectedRoute><MyPage /></ProtectedRoute>} />
+        <Route path="/reservation" element={<ProtectedRoute><ReservationPage /></ProtectedRoute>} />
         <Route path="/eye" element={<EyePage />} />
         <Route path="/nose" element={<NosePage />} />
         <Route path="/face" element={<FacePage />} />
