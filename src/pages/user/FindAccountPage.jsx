@@ -4,11 +4,11 @@ import Button from "@/components/common/Button";
 import { banner3 } from '@/assets/cdnImages';
 import Spacer from "@/components/common/Spacer";
 
-// 추가함 / import useState, Modal, axios
 import React, { useState } from 'react';
-import Modal from "@/components/common/Modal"; // Modal import 추가
-import axiosInstance from "@/api/axiosInstance";
+import Modal from "@/components/common/Modal";
 
+// NOTE: 확정된 docs/api-contract.md에는 아이디/비밀번호 찾기 엔드포인트가 없음.
+// 백엔드에 해당 API가 추가되기 전까지는 안내 메시지만 표시한다.
 const FindAccountPage = () => {
     // 아이디 찾기용 state
     const [email, setEmail] = useState(""); // 아이디 찾기용 이메일 입력값
@@ -19,40 +19,20 @@ const FindAccountPage = () => {
     const [id, setId] = useState(""); // 비번 찾기용 userId
     const [foundPassword, setFoundPassword] = useState(""); // 비번 찾기용 결과 (임시 비밀번호)
 
-    // 아이디 찾기 요청
-    const handleFindId = async () => {
+    const handleFindId = () => {
         if (!email) {
             alert("이메일을 입력하세요.");
             return;
         }
-
-        try {
-            const response = await axiosInstance.post(`/api/user/find_id`, { uEmail: email });
-            setFoundId(response.data);
-            setShowModal(true);
-        } catch (error) {
-            console.error("아이디 찾기 오류:", error);
-            alert("아이디를 찾을 수 없습니다. 입력한 이메일을 확인해주세요.");
-        }
+        alert("아이디 찾기 기능은 현재 지원되지 않습니다. 고객센터로 문의해주세요.");
     };
-        // 비밀번호 찾기 요청
-        const handleFindPassword = async () => {
+
+    const handleFindPassword = () => {
         if (!id) {
             alert("아이디를 입력하세요.");
             return;
         }
-
-        try {
-            const response = await axiosInstance.post(`/api/user/find_password`, {
-                uId: id
-            });
-
-            setFoundPassword(response.data);
-            setShowModal(true);
-        } catch (error) {
-            console.error("비밀번호 찾기 오류:", error);
-            alert("비밀번호를 찾을 수 없습니다. 입력한 정보를 확인해주세요.");
-        }
+        alert("비밀번호 찾기 기능은 현재 지원되지 않습니다. 고객센터로 문의해주세요.");
     };
 
     return (

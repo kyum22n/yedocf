@@ -15,7 +15,6 @@ const ReservationPage = () => {
     const [selectedTime, setSelectedTime] = useState("");
     const [selectedItem, setSelectedItem] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [disabledTimes, setDisabledTimes] = useState([]);
     const [treatments, setTreatments] = useState([]);
 
     const { user } = useUser();
@@ -37,11 +36,11 @@ const ReservationPage = () => {
         );
     }
 
-    // 노출 진료 항목 조회
+    // 노출 + 예약 가능 진료 항목 조회
     useEffect(() => {
         axiosInstance
-            .get("/api/treatments")
-            .then((res) => setTreatments(res.data))
+            .get("/treatments/all")
+            .then((res) => setTreatments(res.data.filter((t) => t.isReservable)))
             .catch((err) => console.error("진료 항목 조회 실패:", err));
     }, []);
 
@@ -52,27 +51,8 @@ const ReservationPage = () => {
         if (!token || !uId || token === "null") {
             alert("로그인이 필요합니다. 다시 로그인해주세요.");
             navigate('/login');
-            return;
         }
-
-        if (selectedDate) {
-            const dateStr = selectedDate.toISOString().split("T")[0];
-
-            axiosInstance
-                .get(`/api/reserve/disabled-times`, {
-                    params: { consultDate: dateStr },
-                })
-                .then((res) => {
-                    const trimmed = res.data.map(time => time.slice(0, 5));
-                    setDisabledTimes(trimmed);
-                })
-                .catch((err) => {
-                    console.error("예약된 시간 조회 실패:", err);
-                });
-        } else {
-            setDisabledTimes([]);
-        }
-    }, [selectedDate, navigate]);
+    }, [navigate]);
 
     const handleSubmit = async () => {
         if (!selectedDate || !selectedTime || !selectedItem) {
@@ -82,21 +62,16 @@ const ReservationPage = () => {
 
         const uId = sessionStorage.getItem('uId');
 
-        const selectedTreatment = treatments.find(
-            (t) => String(t.treatmentId) === selectedItem
-        );
-
         const data = {
             uId,
-            tName: selectedTreatment?.tName,
-            consultDate: selectedDate.toLocaleDateString("sv-SE"),
-            consultTime: selectedTime,
-            status: "대기",
+            treatmentId: Number(selectedItem),
+            reservationDate: selectedDate.toLocaleDateString("sv-SE"),
+            reservationTime: selectedTime,
         };
 
         try {
             setIsLoading(true);
-            await axiosInstance.post("/api/reserve", data);
+            await axiosInstance.post("/reservations/register", data);
             alert("예약이 완료되었습니다. 마이페이지로 이동합니다.");
             setSelectedDate(null);
             setSelectedTime("");
@@ -105,7 +80,7 @@ const ReservationPage = () => {
             navigate("/mypage");
         } catch (error) {
             console.error("예약 실패:", error);
-            alert("예약에 실패했습니다.");
+            alert(error.response?.data?.message || "예약에 실패했습니다.");
         } finally {
             setIsLoading(false);
         }
@@ -123,11 +98,11 @@ const ReservationPage = () => {
                             selectedDate={selectedDate}
                             onChange={(date) => setSelectedDate(date)}
                         />
+                        {/* NOTE: 예약 마감 시간대 조회 API가 계약에 없어 disabledTimes는 항상 비어있음 */}
                         <TimeSelector
                             selectedDate={selectedDate}
                             selectedTime={selectedTime}
                             onSelect={(time) => setSelectedTime(time)}
-                            disabledTimes={disabledTimes}
                         />
                     </div>
 
@@ -140,7 +115,7 @@ const ReservationPage = () => {
                                 { value: "", label: "항목을 선택해주세요" },
                                 ...treatments.map((t) => ({
                                     value: String(t.treatmentId),
-                                    label: t.tName,
+                                    label: t.treatmentName,
                                 })),
                             ]}
                         />

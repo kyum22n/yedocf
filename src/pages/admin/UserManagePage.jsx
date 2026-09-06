@@ -30,15 +30,19 @@ const UserManagePage = () => {
   // 사용자 목록 상태 정의
   const [users, setUsers] = useState([]);
   
-  // 사용자 목록 API 호출
-  useEffect(() => {
-    axiosInstance.get("/api/admin/user/users")
+  const fetchUsers = () => {
+    axiosInstance.get("/api/admin/user/list")
       .then((res) => {
         setUsers(res.data);
       })
       .catch((error) => {
         console.error("회원 목록 조회 실패", error);
       });
+  };
+
+  // 사용자 목록 API 호출
+  useEffect(() => {
+    fetchUsers();
   }, []);
 
   // 모달 및 상태 관리
@@ -172,7 +176,7 @@ const UserManagePage = () => {
               const email = document.querySelector("input[name='email']").value;
               const phone = document.querySelector("input[name='phone']").value;
 
-              const response = await axiosInstance.post("/api/admin/user", {
+              await axiosInstance.post("/api/admin/user/register", {
                 uName: name,
                 uId: username,
                 uPwd: password,
@@ -180,7 +184,7 @@ const UserManagePage = () => {
                 uPhone: phone,
               });
 
-              setUsers([...users, response.data]);
+              fetchUsers();
               setIsModalOpen(false);
             } catch (err) {
               console.error("회원 추가 실패:", err);
@@ -227,7 +231,7 @@ const UserManagePage = () => {
           title="회원 삭제"
           actionLabel="삭제"
           onAction={() => {
-            axiosInstance.post(`/api/admin/user/${selectedUser?.id}`, null).then(() => {
+            axiosInstance.delete(`/api/admin/user/delete`, { params: { uId: selectedUser?.id } }).then(() => {
               setUsers(users.filter((user) => user.uId !== selectedUser?.id));
               handleCloseDeleteModal();
             });

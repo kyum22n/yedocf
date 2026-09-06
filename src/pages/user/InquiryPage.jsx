@@ -14,14 +14,20 @@ import { banner5 } from '@/assets/cdnImages';
 import { useState } from "react";
 import axiosInstance from "@/api/axiosInstance";
 
+const INQUIRY_TYPES = [
+    { value: "RESERVATION", label: "예약 문의" },
+    { value: "TREATMENT", label: "진료 문의" },
+    { value: "PAYMENT", label: "결제 문의" },
+    { value: "ETC", label: "기타" },
+];
+
 const InquiryPage = () => {
 
     // 상태 관리
     const [form, setForm] = useState({
-        uName: "",
-        uEmail: "",
-        visit: false, // 초진 : false, 재진 : true
-        qContent: "",
+        inquiryType: "RESERVATION",
+        title: "",
+        content: "",
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,10 +35,7 @@ const InquiryPage = () => {
     // 입력값 변경 핸들러
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setForm((prev) => ({
-            ...prev,
-            [name]: name === "visit" ? value === "true" : value, // visit이면 문자열을 boolean으로 변환
-        }));
+        setForm((prev) => ({ ...prev, [name]: value }));
     };
 
     // 제출 핸들러
@@ -41,27 +44,26 @@ const InquiryPage = () => {
 
         const uId = sessionStorage.getItem("uId");
 
-        if (!form.uName || !form.uEmail || !form.qContent) {
+        if (!form.title || !form.content) {
             alert("모든 항목을 입력해주세요.");
             return;
         }
 
         try {
             setIsSubmitting(true);
-            await axiosInstance.post("/api/inquiry", {
+            await axiosInstance.post("/inquiries/register", {
                 uId,
-                uName: form.uName,
-                uEmail: form.uEmail,
-                visit: form.visit,
-                qContent: form.qContent,
+                inquiryType: form.inquiryType,
+                title: form.title,
+                content: form.content,
             });
 
             alert("작성하신 문의가 등록되었습니다.");
-            setForm({ uName: "", uEmail: "", visit: false, qContent: "" });
+            setForm({ inquiryType: "RESERVATION", title: "", content: "" });
 
         } catch (error) {
             console.error("문의 등록 실패", error);
-            alert("로그인이 필요합니다.");
+            alert("문의 등록에 실패했습니다. 로그인이 필요합니다.");
 
         } finally {
             setIsSubmitting(false);
@@ -74,67 +76,43 @@ const InquiryPage = () => {
                 title="1:1 문의"
                 image={banner5}
                 objectPosition="object-[50%_40%]"
-            /> 
+            />
             <div className="relative z-20 bg-white">
                 <Spacer size="lg" />
 
                 <div className="max-w-2xl z-20 mx-auto space-y-8">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block font-medium mb-1">이름</label>
+                            <label className="block font-medium mb-1">문의 유형</label>
+                            <select
+                                name="inquiryType"
+                                value={form.inquiryType}
+                                onChange={handleChange}
+                                className="w-full border rounded p-2"
+                            >
+                                {INQUIRY_TYPES.map((t) => (
+                                    <option key={t.value} value={t.value}>{t.label}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block font-medium mb-1">제목</label>
                             <input
                                 type="text"
-                                name="uName"
-                                value={form.uName}
+                                name="title"
+                                value={form.title}
                                 onChange={handleChange}
                                 className="w-full border rounded p-2"
                                 required
                             />
-                        </div>
-                        <div>
-                            <label className="block font-medium mb-1">이메일</label>
-                            <input
-                                type="text"
-                                name="uEmail"
-                                value={form.uEmail}
-                                onChange={handleChange}
-                                className="w-full border rounded p-2"
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block font-medium mb-1">방문 여부</label>
-                            <div className="space-x-4">
-                                <label>
-                                    <input
-                                        type="radio"
-                                        name="visit"
-                                        value="false"
-                                        checked={form.visit === false}
-                                        onChange={handleChange}
-                                    />{" "}
-                                    초진
-                                </label>
-
-                                <label>
-                                    <input
-                                        type="radio"
-                                        name="visit"
-                                        value="true"
-                                        checked={form.visit === true}
-                                        onChange={handleChange}
-                                    />{" "}
-                                    재진
-                                </label>
-                            </div>
                         </div>
 
                         <div>
                             <label className="block font-medium mb-1">문의 내용</label>
                             <textarea
-                                name="qContent"
-                                value={form.qContent}
+                                name="content"
+                                value={form.content}
                                 onChange={handleChange}
                                 className="w-full border rounded p-2 h-32"
                                 required

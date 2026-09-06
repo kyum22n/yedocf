@@ -74,7 +74,7 @@ const NoticeEventPage = () => {
 
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {noticeEvents.map(item => (
-            <div key={item.neId} onClick={() => setSelectedId(item.neId)} className="cursor-pointer">
+            <div key={item.noticeId} onClick={() => setSelectedId(item.noticeId)} className="cursor-pointer">
               <NoticeEventCard item={item} />
           </div>
           ))}
@@ -88,12 +88,12 @@ const NoticeEventPage = () => {
         <Modal isOpen={true} onClose={handleCloseModal}>
           <div className="flex flex-col items-center text-center">
 
-            <h2 className="text-xl font-bold mb-2">{selectedItem.neTitle}</h2>
+            <h2 className="text-xl font-bold mb-2">{selectedItem.title}</h2>
 
-            {selectedItem.neImageUrl && (
+            {selectedItem.imageUrl && (
               <img
-                src={selectedItem.neImageUrl}
-                alt={selectedItem.neTitle}
+                src={selectedItem.imageUrl}
+                alt={selectedItem.title}
                 className="w-full max-w-md mx-auto my-4"
               />
             )}
@@ -101,7 +101,7 @@ const NoticeEventPage = () => {
             <div
               className="text-gray-700"
               dangerouslySetInnerHTML={{
-                __html: selectedItem.neContent?.trim() || "<p>내용이 없습니다.</p>"
+                __html: selectedItem.content?.trim() || "<p>내용이 없습니다.</p>"
               }}
             />
 

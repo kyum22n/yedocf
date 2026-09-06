@@ -22,11 +22,14 @@ const LoginPage = () => {
     const { loginUser } = useUser();
 
     // 로그인 성공 시 처리
-    const handleLoginSuccess = (userId, token, provider) => {
+    const handleLoginSuccess = (userId, token, provider, refreshToken) => {
         sessionStorage.setItem('accessToken', token);
         sessionStorage.setItem('uId', userId);
         sessionStorage.setItem('role', 'USER');
         sessionStorage.setItem('loginProvider', provider);
+        if (refreshToken) {
+            sessionStorage.setItem('refreshToken', refreshToken);
+        }
 
         loginUser({
             id: userId,
@@ -44,12 +47,11 @@ const LoginPage = () => {
         e.preventDefault();
         try {
             const response = await axiosInstance.post('/api/user/login', { uId, uPwd });
-            const token = response.data.token;
-            const userId = response.data.uId;
+            const { accessToken, refreshToken, userId } = response.data;
 
-            if (!token) throw new Error('서버에서 토큰을 받지 못했습니다.');
+            if (!accessToken) throw new Error('서버에서 토큰을 받지 못했습니다.');
 
-            handleLoginSuccess(userId, token, 'default');
+            handleLoginSuccess(userId, accessToken, 'default', refreshToken);
         } catch (error) {
             console.error('로그인 실패:', error);
             if (!isSocialLogin) {
@@ -100,7 +102,7 @@ const LoginPage = () => {
         axiosInstance.post(endpoint, null, { params: { code } })
             .then((res) => {
                 const token = res.data?.accessToken;
-                const userId = res.data?.uId;
+                const userId = res.data?.userId;
                 if (!token || !userId) throw new Error('응답에서 토큰 또는 사용자 ID 없음');
                 handleLoginSuccess(userId, token, provider);
             })

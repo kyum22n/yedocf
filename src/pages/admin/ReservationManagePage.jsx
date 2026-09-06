@@ -16,77 +16,51 @@ import TimeSelectorSelect from "@/components/admin/TimeSelectorSelect";
 import { useState, useEffect } from "react";
 import axiosInstance from "@/api/axiosInstance";
 
-/**
- * packageName    : src.api.noticeEvent
- * fileName       : ReservationManagePage.jsx
- * author         : lkm
- * date           : 25.06.11
- * description    : 403 오류 해결
- * ===========================================================
- */
+const statusOptions = [
+  { value: "PENDING", label: "대기" },
+  { value: "CONFIRMED", label: "확정" },
+  { value: "COMPLETED", label: "완료" },
+  { value: "CANCELED", label: "취소" },
+  { value: "NO_SHOW", label: "노쇼" },
+];
 
 const ReservationManagePage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchCategory, setSearchCategory] = useState("");
-  const [searchText, setSearchText] = useState("");
 
   const [userId, setUserId] = useState("");
-  const [procedure, setProcedure] = useState("");
+  const [treatmentId, setTreatmentId] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState("PENDING");
 
-  const procedureOptions = [
-    { value: "눈 성형", label: "눈 성형" },
-    { value: "코 성형", label: "코 성형" },
-    { value: "윤곽", label: "윤곽" },
-  ];
-
-  const statusOptions = [
-    { value: "대기", label: "대기" },
-    { value: "확정", label: "확정" },
-    { value: "취소", label: "취소" },
-  ];
+  const [treatments, setTreatments] = useState([]);
+  const treatmentOptions = treatments.map((t) => ({ value: String(t.treatmentId), label: t.treatmentName }));
 
   const [reservations, setReservations] = useState([]);
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  const searchOptions = [
-    { value: "id", label: "예약 ID" },
-    { value: "userId", label: "예약자 아이디" },
-    { value: "procedure", label: "시술 항목" },
-    { value: "date", label: "예약 날짜" },
-    { value: "time", label: "시간대" },
-    { value: "status", label: "예약 상태" },
-  ];
-
-  const selectedLabel = searchOptions.find((opt) => opt.value === searchCategory)?.label;
+  const fetchReservations = () => {
+    axiosInstance.get("/admin/reservations/all")
+      .then((res) => setReservations(res.data))
+      .catch((error) => console.error("예약 목록 조회 실패", error));
+  };
 
   useEffect(() => {
-    // API 호출해서 예약 목록 가져오기
-    axiosInstance.get("/api/admin/reserve/reserves")
-      .then((res) => {
-        // rId로 키 명시
-        const mapped = res.data.map((r) => ({
-          ...r,
-          rId: r.rId,
-        }));
-        setReservations(mapped);
-      })
-      .catch((error) => {
-        console.error("예약 목록 조회 실패", error);
-      });
+    fetchReservations();
+
+    axiosInstance.get("/admin/treatments/all")
+      .then((res) => setTreatments(res.data))
+      .catch((error) => console.error("진료 항목 조회 실패", error));
   }, []);
 
-  const handleStatusChange = (rId, status) => {
-    // API 호출해서 예약 상태 변경
+  const handleStatusChange = (reservationId, reservationStatus) => {
     axiosInstance
-      .post(`/api/admin/reserve/${rId}/status`, { status })
+      .put(`/admin/reservations/status/update`, { reservationId, reservationStatus })
       .then(() => {
-        setReservations(
-          reservations.map((r) => (r.rId === rId ? { ...r, status } : r))
+        setReservations((prev) =>
+          prev.map((r) => (r.reservationId === reservationId ? { ...r, reservationStatus } : r))
         );
       })
       .catch((error) => {
@@ -95,13 +69,10 @@ const ReservationManagePage = () => {
   };
 
   const handleDeleteReservation = () => {
-    // API 호출해서 예약 삭제
     axiosInstance
-      .post(`/api/admin/reserve/delete/${selectedReservation.rId}`, {})
-      .then(async () => {
-        // 예약 목록 업데이트
-        const res = await axiosInstance.get("/api/admin/reserve/reserves");
-        setReservations(res.data);
+      .delete(`/admin/reservations/delete/${selectedReservation.reservationId}`)
+      .then(() => {
+        fetchReservations();
         setIsDeleteModalOpen(false);
       })
       .catch((error) => {
@@ -111,16 +82,18 @@ const ReservationManagePage = () => {
 
   const resetForm = () => {
     setUserId("");
-    setProcedure("");
+    setTreatmentId("");
     setSelectedDate("");
     setSelectedTime("");
-    setStatus("");
+    setStatus("PENDING");
   };
 
   const handleCloseModal = () => {
     resetForm();
     setIsModalOpen(false);
   };
+
+  const treatmentName = (id) => treatments.find((t) => t.treatmentId === id)?.treatmentName ?? id;
 
   return (
     <div className="flex">
@@ -129,37 +102,7 @@ const ReservationManagePage = () => {
       <main className="w-full min-h-screen p-8 bg-gray-50">
         <h1 className="text-2xl font-bold mb-6">예약 관리</h1>
 
-        {/* 검색 영역 */}
-        {/* <div className="flex mb-4 justify-between items-center gap-4"> */}
         <div className="flex mb-4 justify-end gap-4">
-
-          {/* <div className="flex gap-2">
-            <Dropdown
-              value={searchCategory}
-              onChange={(e) => setSearchCategory(e.target.value)}
-              options={searchOptions}
-              className="h-10"
-            />
-            <div className="w-1/2">
-              <InputField
-                name="searchText"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                placeholder={
-                  searchCategory
-                    ? `${selectedLabel}을(를) 입력하세요`
-                    : "검색할 항목을 먼저 선택하세요"
-                }
-                variant="admin"
-                className="h-10"
-                labelHidden={true}
-              />
-            </div>
-            <Button variant="primary" className="h-10">
-              검색
-            </Button>
-          </div> */}
-
           <Button
             variant="primary"
             className="h-10 bg-green-600"
@@ -185,23 +128,23 @@ const ReservationManagePage = () => {
             </thead>
             <tbody>
               {reservations.map((r) => (
-                <tr className="text-center" key={r.rId}>
-                  <td className="px-4 py-2 border">{r.rId}</td>
+                <tr className="text-center" key={r.reservationId}>
+                  <td className="px-4 py-2 border">{r.reservationId}</td>
                   <td className="px-4 py-2 border">{r.uId}</td>
-                  <td className="px-4 py-2 border">{r.tName}</td>
-                  <td className="px-4 py-2 border">{r.consultDate?.slice(0, 10)}</td>
-                  <td className="px-4 py-2 border">{r.consultTime}</td>
+                  <td className="px-4 py-2 border">{treatmentName(r.treatmentId)}</td>
+                  <td className="px-4 py-2 border">{r.reservationDate}</td>
+                  <td className="px-4 py-2 border">{r.reservationTime}</td>
                   <td className="px-4 py-2 border">
                     <select
                       className="border p-1"
-                      value={r.status}
+                      value={r.reservationStatus}
                       onChange={(e) =>
-                        handleStatusChange(r.rId, e.target.value)
+                        handleStatusChange(r.reservationId, e.target.value)
                       }
                     >
-                      <option value="대기">대기</option>
-                      <option value="확정">확정</option>
-                      <option value="취소">취소</option>
+                      {statusOptions.map((s) => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
+                      ))}
                     </select>
                   </td>
                   <td className="py-2 border text-center">
@@ -243,19 +186,17 @@ const ReservationManagePage = () => {
           onAction={async () => {
             try {
               await axiosInstance.post(
-                "/api/admin/reserve",
+                "/admin/reservations/register",
                 {
                   uId: userId,
-                  tName: procedure,
-                  consultDate: selectedDate,
-                  consultTime: selectedTime,
-                  status: status,
+                  treatmentId: Number(treatmentId),
+                  reservationDate: selectedDate,
+                  reservationTime: selectedTime,
+                  reservationStatus: status,
                 }
               );
 
-              // 예약 목록 업데이트
-              const res = await axiosInstance.get("/api/admin/reserve/reserves");
-              setReservations(res.data);
+              fetchReservations();
               setIsModalOpen(false);
               resetForm();
             } catch (err) {
@@ -272,28 +213,9 @@ const ReservationManagePage = () => {
             onChange={(e) => setUserId(e.target.value)}
           />
           <Dropdown
-            value={procedure}
-            onChange={(e) => setProcedure(e.target.value)}
-            options={[
-              { value: "콧대 성형", label: "콧대 성형" },
-              { value: "매부리코 성형", label: "매부리코 성형" },
-              { value: "복코 교정", label: "복코 교정" },
-              { value: "코끝 성형", label: "코끝 성형" },
-              { value: "콧볼 축소", label: "콧볼 축소" },
-              { value: "쌍커풀 수술", label: "쌍커풀 수술" },
-              { value: "비절개 쌍커풀 수술", label: "비절개 쌍커풀 수술" },
-              { value: "앞트임 수술", label: "앞트임 수술" },
-              { value: "뒤트임 수술", label: "뒤트임 수술" },
-              { value: "밑트임 수술", label: "밑트임 수술" },
-              { value: "눈매 교정 수술", label: "눈매 교정 수술" },
-              { value: "지방 재배치 수술", label: "지방 재배치 수술" },
-              { value: "다크서클 제거", label: "다크서클 제거" },
-              { value: "광대축소 수술", label: "광대축소 수술" },
-              { value: "사각턱 수술", label: "사각턱 수술" },
-              { value: "V라인 턱끝 성형수술", label: "V라인 턱끝 성형수술" },
-              { value: "양악수술", label: "양악수술" },
-              { value: "이중턱 지방흡입", label: "이중턱 지방흡입" },
-            ]}
+            value={treatmentId}
+            onChange={(e) => setTreatmentId(e.target.value)}
+            options={treatmentOptions}
             className="p-2"
           />
           <InputField
@@ -345,17 +267,16 @@ const ReservationManagePage = () => {
           resetOnClose={true}
           onAction={async () => {
             try {
-              await axiosInstance.post(`/api/admin/reserve/${selectedReservation.rId}`, {
-                rId: selectedReservation.rId,
+              await axiosInstance.put(`/admin/reservations/update`, {
+                reservationId: selectedReservation.reservationId,
                 uId: selectedReservation.uId,
-                tName: selectedReservation.tName,
-                consultDate: selectedReservation.consultDate,
-                consultTime: selectedReservation.consultTime,
-                status: selectedReservation.status,
+                treatmentId: selectedReservation.treatmentId,
+                reservationDate: selectedReservation.reservationDate,
+                reservationTime: selectedReservation.reservationTime,
+                reservationStatus: selectedReservation.reservationStatus,
               });
 
-              const updatedList = await axiosInstance.get("/api/admin/reserve/reserves");
-              setReservations(updatedList.data);
+              fetchReservations();
               setIsEditModalOpen(false);
             } catch (err) {
               console.error("예약 변경 실패:", err);
@@ -376,33 +297,14 @@ const ReservationManagePage = () => {
             }
           />
           <Dropdown
-            value={selectedReservation?.tName || ""}
+            value={selectedReservation ? String(selectedReservation.treatmentId) : ""}
             onChange={(e) =>
               setSelectedReservation((prev) => ({
                 ...prev,
-                tName: e.target.value,
+                treatmentId: Number(e.target.value),
               }))
             }
-            options={[
-              { value: "콧대 성형", label: "콧대 성형" },
-              { value: "매부리코 성형", label: "매부리코 성형" },
-              { value: "복코 교정", label: "복코 교정" },
-              { value: "코끝 성형", label: "코끝 성형" },
-              { value: "콧볼 축소", label: "콧볼 축소" },
-              { value: "쌍커풀 수술", label: "쌍커풀 수술" },
-              { value: "비절개 쌍커풀 수술", label: "비절개 쌍커풀 수술" },
-              { value: "앞트임 수술", label: "앞트임 수술" },
-              { value: "뒤트임 수술", label: "뒤트임 수술" },
-              { value: "밑트임 수술", label: "밑트임 수술" },
-              { value: "눈매 교정 수술", label: "눈매 교정 수술" },
-              { value: "지방 재배치 수술", label: "지방 재배치 수술" },
-              { value: "다크서클 제거", label: "다크서클 제거" },
-              { value: "광대축소 수술", label: "광대축소 수술" },
-              { value: "사각턱 수술", label: "사각턱 수술" },
-              { value: "V라인 턱끝 성형수술", label: "V라인 턱끝 성형수술" },
-              { value: "양악수술", label: "양악수술" },
-              { value: "이중턱 지방흡입", label: "이중턱 지방흡입" },
-            ]}
+            options={treatmentOptions}
             className="p-2"
           />
           <InputField
@@ -410,33 +312,33 @@ const ReservationManagePage = () => {
             type="date"
             variant="admin"
             className="p-2"
-            value={selectedReservation?.consultDate || ""}
+            value={selectedReservation?.reservationDate || ""}
             onChange={(e) =>
               setSelectedReservation((prev) => ({
                 ...prev,
-                consultDate: e.target.value,
-                consultTime: "",
+                reservationDate: e.target.value,
+                reservationTime: "",
               }))
             }
           />
           <TimeSelectorSelect
-            selectedDate={selectedReservation?.consultDate || ""}
-            selectedTime={selectedReservation?.consultTime || ""}
+            selectedDate={selectedReservation?.reservationDate || ""}
+            selectedTime={selectedReservation?.reservationTime || ""}
             onSelect={(newTime) =>
               setSelectedReservation((prev) => ({
                 ...prev,
-                consultTime: newTime,
+                reservationTime: newTime,
               }))
             }
             className="p-2"
             labelHidden={true}
           />
           <Dropdown
-            value={selectedReservation?.status || ""}
+            value={selectedReservation?.reservationStatus || ""}
             onChange={(e) =>
               setSelectedReservation((prev) => ({
                 ...prev,
-                status: e.target.value,
+                reservationStatus: e.target.value,
               }))
             }
             options={statusOptions}

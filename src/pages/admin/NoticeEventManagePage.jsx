@@ -12,20 +12,18 @@ import InputField from "@/components/common/InputField";
 import Dropdown from "@/components/common/Dropdown";
 import Button from "@/components/common/Button";
 import Modal from "@/components/common/Modal";
-import { formatDate, formatDateTime, formatToISODateTime } from "@/constants/dateUtils";
+import { formatDateTime, formatToISODateTime } from "@/constants/dateUtils";
 
 import { useState, useEffect } from "react";
 import axiosInstance from "@/api/axiosInstance";
 
 const NoticeEventManagePage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchCategory, setSearchCategory] = useState("");
-  const [searchText, setSearchText] = useState("");
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-  const [type, setType] = useState("공지사항");
+  const [type, setType] = useState("NOTICE");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
@@ -35,19 +33,9 @@ const NoticeEventManagePage = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const typeOptions = [
-    { value: "공지사항", label: "공지사항" },
-    { value: "이벤트", label: "이벤트" },
+    { value: "NOTICE", label: "공지사항" },
+    { value: "EVENT", label: "이벤트" },
   ];
-
-  const searchOptions = [
-    { value: "neId", label: "순번" },
-    { value: "neTitle", label: "제목" },
-    { value: "neContent", label: "내용" },
-    { value: "neStartDate", label: "게시시작일" },
-    { value: "neType", label: "구분" },
-  ];
-
-  const selectedLabel = searchOptions.find((opt) => opt.value === searchCategory)?.label;
 
   useEffect(() => {
     fetchNotices();
@@ -55,7 +43,7 @@ const NoticeEventManagePage = () => {
 
   const fetchNotices = async () => {
     try {
-      const res = await axiosInstance.get("/api/admin/noticeEvent");
+      const res = await axiosInstance.get("/admin/notices/all");
       setNotices(res.data);
     } catch (error) {
       console.error("공지사항/이벤트 목록 조회 실패", error);
@@ -63,13 +51,15 @@ const NoticeEventManagePage = () => {
   };
 
   const handleCreateNotice = async () => {
-    await axiosInstance.post("/api/admin/noticeEvent", {
-      neTitle: title,
-      neContent: content,
-      neImageUrl: imageUrl,
-      neType: type,
-      neStartDate: formatToISODateTime(startDate),
-      neEndDate: formatToISODateTime(endDate),
+    await axiosInstance.post("/admin/notices/register", {
+      title,
+      content,
+      imageUrl,
+      noticeType: type,
+      isVisible: true,
+      startAt: formatToISODateTime(startDate),
+      endAt: formatToISODateTime(endDate),
+      createdBy: sessionStorage.getItem("aId"),
     });
 
     await fetchNotices();
@@ -78,17 +68,22 @@ const NoticeEventManagePage = () => {
   };
 
   const handleUpdateNotice = async () => {
-    await axiosInstance.put(`/api/admin/noticeEvent/${selectedNotice.neId}`, {
-      ...selectedNotice,
-      neStartDate: formatToISODateTime(selectedNotice.neStartDate),
-      neEndDate: formatToISODateTime(selectedNotice.neEndDate),
+    await axiosInstance.put(`/admin/notices/update`, {
+      noticeId: selectedNotice.noticeId,
+      title: selectedNotice.title,
+      content: selectedNotice.content,
+      imageUrl: selectedNotice.imageUrl,
+      noticeType: selectedNotice.noticeType,
+      isVisible: selectedNotice.isVisible ?? true,
+      startAt: formatToISODateTime(selectedNotice.startAt),
+      endAt: formatToISODateTime(selectedNotice.endAt),
     });
     await fetchNotices();
     setIsEditModalOpen(false);
   };
 
   const handleDeleteNotice = async () => {
-    await axiosInstance.delete(`/api/admin/noticeEvent/${selectedNotice.neId}`);
+    await axiosInstance.delete(`/admin/notices/delete/${selectedNotice.noticeId}`);
     await fetchNotices();
     setIsDeleteModalOpen(false);
   };
@@ -99,7 +94,7 @@ const NoticeEventManagePage = () => {
     setImageUrl("");
     setStartDate("");
     setEndDate("");
-    setType("공지사항");
+    setType("NOTICE");
   };
 
   return (
@@ -108,17 +103,7 @@ const NoticeEventManagePage = () => {
       <main className="w-full min-h-screen p-8 bg-gray-50">
         <h1 className="text-2xl font-bold mb-6">공지사항/이벤트 관리</h1>
 
-        {/* <div className="flex mb-4 justify-between items-center gap-4"> */}
         <div className="flex mb-4 justify-end gap-4">
-
-          {/* <div className="flex gap-2">
-            <Dropdown value={searchCategory} onChange={(e) => setSearchCategory(e.target.value)} options={searchOptions} className="h-10" />
-            <div className="w-1/2">
-              <InputField name="searchText" value={searchText} onChange={(e) => setSearchText(e.target.value)}
-                placeholder={searchCategory ? `${selectedLabel}을 입력하세요` : "검색할 항목 선택"} variant="admin" className="h-10" labelHidden={true} />
-            </div>
-            <Button variant="primary" className="h-10">검색</Button>
-          </div> */}
           <Button variant="primary" className="h-10 bg-green-600" onClick={() => setIsModalOpen(true)}>새 게시물</Button>
         </div>
 
@@ -137,13 +122,13 @@ const NoticeEventManagePage = () => {
             </thead>
             <tbody>
               {notices.map((n, index) => (
-                <tr className="text-center" key={n.neId}>
+                <tr className="text-center" key={n.noticeId}>
                   <td className="px-4 py-2 border">{index + 1}</td>
-                  <td className="px-4 py-2 border">{n.neTitle}</td>
-                  <td className="px-4 py-2 border">{n.neContent}</td>
-                  <td className="px-4 py-2 border">{n.neImageUrl}</td>
-                  <td className="px-4 py-2 border">{formatDateTime(n.neStartDate)} ~ {formatDateTime(n.neEndDate)}</td>
-                  <td className="px-4 py-2 border">{n.neType}</td>
+                  <td className="px-4 py-2 border">{n.title}</td>
+                  <td className="px-4 py-2 border">{n.content}</td>
+                  <td className="px-4 py-2 border">{n.imageUrl}</td>
+                  <td className="px-4 py-2 border">{formatDateTime(n.startAt)} ~ {formatDateTime(n.endAt)}</td>
+                  <td className="px-4 py-2 border">{n.noticeType}</td>
                   <td className="py-2 border flex justify-center gap-2">
                     <Button variant="secondary" onClick={() => { setSelectedNotice(n); setIsEditModalOpen(true); }}>변경</Button>
                     <Button variant="danger" onClick={() => { setSelectedNotice(n); setIsDeleteModalOpen(true); }}>삭제</Button>
@@ -166,17 +151,17 @@ const NoticeEventManagePage = () => {
 
         {/* 수정 모달 */}
         <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="게시글 변경" actionLabel="수정" resetOnClose={true} onAction={handleUpdateNotice}>
-          <InputField name="neTitle" placeholder="제목" variant="admin" className="p-2" value={selectedNotice?.neTitle || ""} onChange={(e) => setSelectedNotice(prev => ({ ...prev, neTitle: e.target.value }))} />
-          <InputField name="neContent" placeholder="내용" variant="admin" className="p-2" value={selectedNotice?.neContent || ""} onChange={(e) => setSelectedNotice(prev => ({ ...prev, neContent: e.target.value }))} />
-          <InputField name="neImageUrl" placeholder="이미지 URL" variant="admin" className="p-2" value={selectedNotice?.neImageUrl || ""} onChange={(e) => setSelectedNotice(prev => ({ ...prev, neImageUrl: e.target.value }))} />
-          <InputField name="neStartDate" type="date" variant="admin" className="p-2" value={selectedNotice?.neStartDate || ""} onChange={(e) => setSelectedNotice(prev => ({ ...prev, neStartDate: e.target.value }))} />
-          <InputField name="neEndDate" type="date" variant="admin" className="p-2" value={selectedNotice?.neEndDate || ""} onChange={(e) => setSelectedNotice(prev => ({ ...prev, neEndDate: e.target.value }))} />
-          <Dropdown value={selectedNotice?.neType || ""} onChange={(e) => setSelectedNotice(prev => ({ ...prev, neType: e.target.value }))} options={typeOptions} className="p-2" />
+          <InputField name="title" placeholder="제목" variant="admin" className="p-2" value={selectedNotice?.title || ""} onChange={(e) => setSelectedNotice(prev => ({ ...prev, title: e.target.value }))} />
+          <InputField name="content" placeholder="내용" variant="admin" className="p-2" value={selectedNotice?.content || ""} onChange={(e) => setSelectedNotice(prev => ({ ...prev, content: e.target.value }))} />
+          <InputField name="imageUrl" placeholder="이미지 URL" variant="admin" className="p-2" value={selectedNotice?.imageUrl || ""} onChange={(e) => setSelectedNotice(prev => ({ ...prev, imageUrl: e.target.value }))} />
+          <InputField name="startAt" type="date" variant="admin" className="p-2" value={selectedNotice?.startAt || ""} onChange={(e) => setSelectedNotice(prev => ({ ...prev, startAt: e.target.value }))} />
+          <InputField name="endAt" type="date" variant="admin" className="p-2" value={selectedNotice?.endAt || ""} onChange={(e) => setSelectedNotice(prev => ({ ...prev, endAt: e.target.value }))} />
+          <Dropdown value={selectedNotice?.noticeType || ""} onChange={(e) => setSelectedNotice(prev => ({ ...prev, noticeType: e.target.value }))} options={typeOptions} className="p-2" />
         </Modal>
 
         {/* 삭제 모달 */}
         <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="게시글 삭제" actionLabel="삭제" onAction={handleDeleteNotice}>
-          <p className="text-sm text-gray-700">게시글 <strong>{selectedNotice?.neTitle}</strong> 을(를) 삭제하시겠습니까?</p>
+          <p className="text-sm text-gray-700">게시글 <strong>{selectedNotice?.title}</strong> 을(를) 삭제하시겠습니까?</p>
         </Modal>
       </main>
     </div>

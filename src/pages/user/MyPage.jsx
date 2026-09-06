@@ -9,6 +9,8 @@ import axiosInstance from "@/api/axiosInstance";
 import { useUser } from "@/contexts/UserProvider";
 import { useNavigate } from "react-router-dom";
 
+const CANCELABLE_STATUSES = ["PENDING", "CONFIRMED"];
+
 const MyPage = () => {
     const { user, logoutUser } = useUser();
     const navigate = useNavigate();
@@ -50,7 +52,7 @@ const MyPage = () => {
         try {
             const uId = sessionStorage.getItem("uId");
 
-            await axiosInstance.post(`/api/user/Delete/${uId}`, null);
+            await axiosInstance.delete(`/api/user/withdraw`, { params: { uId } });
 
             alert("회원 탈퇴가 완료되었습니다.");
             logoutUser(); // 유저 상태 초기화
@@ -62,20 +64,16 @@ const MyPage = () => {
     };
 
     // 모달 및 상태 관리
-    const [userInfo, setUserInfo] = useState({ uName: "", uId: "", uEmail: "", uPhone: "" }); // 사용자 정보
-
-    const [showPwdModal, setShowPwdModal] = useState(false); // 비밀번호 변경 모달 표시 여부
-    const [oldPwd, setOldPwd] = useState(""); // 기존 비밀번호 입력값
-    const [newPwd, setNewPwd] = useState(""); // 새 비밀번호 입력값
-    const [confirmPwd, setConfirmPwd] = useState(""); // 비밀번호 확인 입력값
+    const [userInfo, setUserInfo] = useState({ uId: "", uName: "", uEmail: "", uPhone: "", uBirth: "", uGender: "" });
 
     const [showPhoneModal, setShowPhoneModal] = useState(false); // 전화번호 변경 모달 표시 여부
     const [newPhone, setNewPhone] = useState(""); // 전화번호 변경 입력 값
 
     const [reservations, setReservations] = useState([]); // 예약 내역
+    const [treatmentNames, setTreatmentNames] = useState({}); // treatmentId -> treatmentName
 
     const [inquiries, setInquiries] = useState([]); // 문의 내역
-    const [selectedInquiry, setSelectedInquiry] = useState([]); // 선택된 문의
+    const [selectedInquiry, setSelectedInquiry] = useState(null); // 선택된 문의
     const [showInquiryModal, setShowInquiryModal] = useState(false); // 문의 내용 상세보기 모달 표시 여부
 
     useEffect(() => {
@@ -87,7 +85,7 @@ const MyPage = () => {
         }
 
         // 예약 내역 불러오기
-        axiosInstance.get(`/api/reserve/${uId}`)
+        axiosInstance.get(`/reservations/member`, { params: { uId } })
             .then((response) => {
                 setReservations(response.data);
             })
@@ -95,8 +93,19 @@ const MyPage = () => {
                 console.error("예약 내역 조회 실패", error);
             });
 
+        // 진료 항목 이름 조회 (예약 내역에 이름 표시용)
+        axiosInstance.get(`/treatments/all`)
+            .then((response) => {
+                const map = {};
+                response.data.forEach((t) => { map[t.treatmentId] = t.treatmentName; });
+                setTreatmentNames(map);
+            })
+            .catch((error) => {
+                console.error("진료 항목 조회 실패", error);
+            });
+
         // 사용자 정보 불러오기
-        axiosInstance.get(`/api/user/myinfo`)
+        axiosInstance.get(`/api/user/mypage`, { params: { uId } })
             .then((response) => {
                 setUserInfo(response.data);
             })
@@ -105,7 +114,7 @@ const MyPage = () => {
             });
 
         // 문의 내역 불러오기
-        axiosInstance.get('/api/inquiry')
+        axiosInstance.get('/inquiries/member', { params: { uId } })
             .then((response) => {
                 setInquiries(response.data);
             })
@@ -140,13 +149,6 @@ const MyPage = () => {
                                     <th className="text-left font-medium py-3">아이디</th>
                                     <td className="py-3">{userInfo.uId}</td>
                                     <td></td>
-                                </tr>
-                                <tr>
-                                    <th className="text-left font-medium py-3">비밀번호</th>
-                                    <td className="py-3">●●●●●●</td>
-                                    <td className="text-right">
-                                        <Button variant="secondary" onClick={() => setShowPwdModal(true)}>변경</Button>
-                                    </td>
                                 </tr>
                                 <tr>
                                     <th className="text-left font-medium py-3">이메일</th>
@@ -188,27 +190,33 @@ const MyPage = () => {
                                         </tr>
                                     ) : (
                                         reservations.map((r) => (
-                                            <tr key={r.rId}>
-                                                <td className="border p-2">{r.tName}</td>
-                                                <td className="border p-2">{r.consultDate?.slice(0, 10)}</td>
-                                                <td className="border p-2">{r.consultTime}</td>
+                                            <tr key={r.reservationId}>
+                                                <td className="border p-2">{treatmentNames[r.treatmentId] ?? r.treatmentId}</td>
+                                                <td className="border p-2">{r.reservationDate}</td>
+                                                <td className="border p-2">{r.reservationTime}</td>
                                                 <td className="border p-2">
                                                     <div className="flex items-center justify-center space-x-2">
-                                                        <span>{r.status}</span>
-                                                        {(r.status === "예약됨" || r.status === "대기") && (
+                                                        <span>{r.reservationStatus}</span>
+                                                        {CANCELABLE_STATUSES.includes(r.reservationStatus) && (
                                                             // 예약 취소 버튼
                                                             <Button
                                                                 variant="secondary"
                                                                 className="text-sm"
                                                                 onClick={async () => {
+                                                                    const uId = sessionStorage.getItem("uId");
                                                                     try {
-                                                                        await axiosInstance.post(`/api/reserve/${r.rId}/cancel`, null);
+                                                                        await axiosInstance.put(`/reservations/cancel`, {
+                                                                            reservationId: r.reservationId,
+                                                                            uId,
+                                                                        });
                                                                         alert("예약이 취소되었습니다.");
 
                                                                         // 예약 목록 갱신
                                                                         setReservations((prev) =>
-                                                                            prev.map((response) =>
-                                                                                response.rId === r.rId ? { ...response, status: "취소 완료" } : response
+                                                                            prev.map((res) =>
+                                                                                res.reservationId === r.reservationId
+                                                                                    ? { ...res, reservationStatus: "CANCELED" }
+                                                                                    : res
                                                                             )
                                                                         );
                                                                     } catch (error) {
@@ -235,7 +243,7 @@ const MyPage = () => {
                         <table className="w-full border border-gray-300 text-center text-sm">
                             <thead className="bg-blue-100 text-gray-800">
                                 <tr>
-                                    <th className="p-2 border">문의 내용</th>
+                                    <th className="p-2 border">제목</th>
                                     <th className="p-2 border">작성일</th>
                                     <th className="p-2 border">처리 상태</th>
                                 </tr>
@@ -244,12 +252,11 @@ const MyPage = () => {
                                 {
                                     inquiries.length === 0 ? (
                                         <tr>
-                                            <td colSpan="4" className="p-4 text-gray-500">문의 내역이 없습니다.</td>
+                                            <td colSpan="3" className="p-4 text-gray-500">문의 내역이 없습니다.</td>
                                         </tr>
                                     ) : (
                                         inquiries.map((q) => (
-                                            <tr key={q.qId}>
-
+                                            <tr key={q.inquiryId}>
                                                 <td
                                                     className="border p-2 text-blue-600 underline cursor-pointer"
                                                     onClick={() => {
@@ -257,11 +264,10 @@ const MyPage = () => {
                                                         setShowInquiryModal(true);
                                                     }}
                                                 >
-                                                    문의 내용 상세보기
+                                                    {q.title}
                                                 </td>
                                                 <td className="border p-2">{formatDateTime(q.createdAt)}</td>
-                                                <td className="border p-2">{q.qStatus}</td>
-
+                                                <td className="border p-2">{q.inquiryStatus}</td>
                                             </tr>
                                         ))
                                     )
@@ -273,69 +279,6 @@ const MyPage = () => {
                 </section>
                 <Spacer size="lg" />
             </div>
-            {/* 비밀번호 변경 모달 */}
-            <Modal
-                isOpen={showPwdModal}
-                onClose={() => setShowPwdModal(false)}
-                title="비밀번호 변경"
-                actionLabel="변경"
-                onAction={async () => {
-                    if (!oldPwd || !newPwd || !confirmPwd) {
-                        alert("모든 항목을 입력해주세요.");
-                        return;
-                    }
-
-                    if (newPwd !== confirmPwd) {
-                        alert("새 비밀번호가 일치하지 않습니다.");
-                        return;
-                    }
-
-                    try {
-                        const uId = sessionStorage.getItem("uId");
-
-                        await axiosInstance.post("/api/user/password", {
-                            uId: uId,
-                            oldPwd: oldPwd,
-                            newPwd: newPwd,
-                        });
-
-                        alert("비밀번호가 변경되었습니다.");
-                        setShowPwdModal(false);
-                        setOldPwd("");
-                        setNewPwd("");
-                        setConfirmPwd("");
-                    } catch (error) {
-                        console.error("비밀번호 변경 실패", error);
-                        if (error.response && error.response.data) {
-                            alert(`변경 실패: ${error.response.data}`);
-                        } else {
-                            alert("비밀번호 변경에 실패했습니다.");
-                        }
-                    }
-                }}
-            >
-                <input
-                    type="password"
-                    placeholder="기존 비밀번호"
-                    className="w-full border p-2 rounded mb-3"
-                    value={oldPwd}
-                    onChange={(e) => setOldPwd(e.target.value)}
-                />
-                <input
-                    type="password"
-                    placeholder="새 비밀번호"
-                    className="w-full border p-2 rounded mb-3"
-                    value={newPwd}
-                    onChange={(e) => setNewPwd(e.target.value)}
-                />
-                <input
-                    type="password"
-                    placeholder="비밀번호 확인"
-                    className="w-full border p-2 rounded"
-                    value={confirmPwd}
-                    onChange={(e) => setConfirmPwd(e.target.value)}
-                />
-            </Modal>
 
             {/* 전화번호 변경 모달 */}
             <Modal
@@ -347,15 +290,18 @@ const MyPage = () => {
                     try {
                         const uId = sessionStorage.getItem("uId");
 
-                        await axiosInstance.post("/api/user/phone", {
-                            uId: uId,
+                        await axiosInstance.put("/api/user/mypage/update", {
+                            uId,
+                            uName: userInfo.uName,
                             uPhone: newPhone,
+                            uBirth: userInfo.uBirth,
+                            uGender: userInfo.uGender,
                         });
 
                         alert("핸드폰 번호가 변경되었습니다.");
 
                         // 서버에서 최신 userInfo 다시 가져오기 = 실시간 변경
-                        const updatedUserInfo = await axiosInstance.get(`/api/user/myinfo`);
+                        const updatedUserInfo = await axiosInstance.get(`/api/user/mypage`, { params: { uId } });
 
                         setUserInfo(updatedUserInfo.data);
 
@@ -363,15 +309,11 @@ const MyPage = () => {
                         setNewPhone("");
                     } catch (error) {
                         console.error("전화번호 변경 실패", error);
-                        if (error.response && error.response.data) {
-                            alert(`변경 실패: ${error.response.data}`);
-                        } else {
-                            alert("전화번호 변경에 실패했습니다.");
-                        }
+                        const message = error.response?.data?.message;
+                        alert(message ? `변경 실패: ${message}` : "전화번호 변경에 실패했습니다.");
                     }
                 }}
             >
-                {/* [변경] 전화번호 입력창에 상태(newPhone) 바인딩 추가 (value, onChange) */}
                 <input
                     type="tel"
                     placeholder="새 전화번호"
@@ -392,12 +334,19 @@ const MyPage = () => {
                 {selectedInquiry && (
                     <div className="space-y-4 text-sm">
                         <div>
-                            <strong>문의 내용</strong>
+                            <strong>{selectedInquiry.title}</strong>
                             <div className="mt-1 p-2 border rounded bg-gray-50 whitespace-pre-wrap">
-                                {selectedInquiry.qContent}
+                                {selectedInquiry.content}
                             </div>
                         </div>
-
+                        {selectedInquiry.answer && (
+                            <div>
+                                <strong>답변</strong>
+                                <div className="mt-1 p-2 border rounded bg-gray-50 whitespace-pre-wrap">
+                                    {selectedInquiry.answer.answerContent}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </Modal>

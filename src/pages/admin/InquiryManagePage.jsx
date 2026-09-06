@@ -18,19 +18,18 @@ const InquiryManagePage = () => {
     const [inquiries, setInquiries] = useState([]);
     const [selectedInquiry, setSelectedInquiry] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [qAnswer, setQAnswer] = useState("");
+    const [answerContent, setAnswerContent] = useState("");
 
     // 문의 목록 조회
     const fetchInquiries = async () => {
         try {
-            const response = await axiosInstance.get("/api/admin/inquiry");
+            const response = await axiosInstance.get("/admin/inquiries/all");
             setInquiries(response.data);
         } catch (error) {
             console.error("문의 목록 불러오기 실패", error);
         }
     }
 
-    // 문의 답변 제출
     useEffect(() => {
         fetchInquiries();
     }, []);
@@ -38,13 +37,14 @@ const InquiryManagePage = () => {
     // 문의 답변 핸들러
     const handleAnswerSubmit = async () => {
         try {
-            await axiosInstance.post(`/api/admin/inquiry/${selectedInquiry.qId}/answer`, {
-                qAnswer: qAnswer
+            await axiosInstance.post(`/admin/inquiries/answers/register`, {
+                inquiryId: selectedInquiry.inquiryId,
+                answerContent,
             });
 
             alert("답변이 등록되었습니다.");
             setIsModalOpen(false);
-            setQAnswer("");
+            setAnswerContent("");
             fetchInquiries(); // 목록 새로 고침
 
         } catch (error) {
@@ -63,31 +63,30 @@ const InquiryManagePage = () => {
                         <thead>
                             <tr className="bg-gray-100 text-center text-sm font-semibold">
                                 <th className="px-4 py-3 border">아이디</th>
-                                <th className="px-4 py-3 border">이름</th>
-                                <th className="px-4 py-3 border">이메일</th>
-                                <th className="px-4 py-3 border">방문 여부</th>
+                                <th className="px-4 py-3 border">유형</th>
+                                <th className="px-4 py-3 border">제목</th>
                                 <th className="px-4 py-3 border">문의 내용</th>
                                 <th className="px-4 py-3 border">작성일자</th>
                                 <th className="px-4 py-3 border">처리 상태</th>
                                 <th className="px-4 border">답변</th>
                             </tr>
                         </thead>
-                        <tbody> 
+                        <tbody>
                             {inquiries.map((q) => (
-                                <tr key={q.qId} className="text-center">
+                                <tr key={q.inquiryId} className="text-center">
                                     <td className="px-4 py-4 border">{q.uId}</td>
-                                    <td className="px-4 py-4 border">{q.uName}</td>
-                                    <td className="px-4 py-4 border">{q.uEmail}</td>
-                                    <td className="px-4 py-4 border">{q.visit ? "O" : "X"}</td>
-                                    <td className="px-4 py-4 border">{q.qContent}</td>
+                                    <td className="px-4 py-4 border">{q.inquiryType}</td>
+                                    <td className="px-4 py-4 border">{q.title}</td>
+                                    <td className="px-4 py-4 border">{q.content}</td>
                                     <td className="px-4 py-4 border">{formatDateTime(q.createdAt)}</td>
-                                    <td className="px-4 py-4 border">{q.qStatus}</td>
+                                    <td className="px-4 py-4 border">{q.inquiryStatus}</td>
                                     <td className="px-4 py-4 border">
                                         <button
                                             variant="primary"
                                             className="text-blue-500 hover:underline"
                                             onClick={() => {
                                                 setSelectedInquiry(q);
+                                                setAnswerContent(q.answer?.answerContent ?? "");
                                                 setIsModalOpen(true);
                                             }}
                                         >
@@ -110,14 +109,14 @@ const InquiryManagePage = () => {
                     <div>
                         <p className="mb-2 text-sm text-gray-600">문의 내용</p>
                         <p className="text-gray-800 bg-gray-100 p-2 rounded text-sm mb-4">
-                            {selectedInquiry?.qContent}
+                            {selectedInquiry?.content}
                         </p>
 
                         <textarea
                             className="w-full border rounded p-2"
                             placeholder="답변을 입력하세요"
-                            value={qAnswer}
-                            onChange={(e) => setQAnswer(e.target.value)}
+                            value={answerContent}
+                            onChange={(e) => setAnswerContent(e.target.value)}
                         />
                     </div>
                 </Modal>

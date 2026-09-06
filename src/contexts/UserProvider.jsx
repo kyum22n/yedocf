@@ -34,7 +34,7 @@ export const UserProvider = ({ children }) => {
     // 일반 사용자 처리
     if (uId) {
       axiosInstance
-        .get(`/api/user/myinfo`) // token에서 uId 추출해서 "그 사용자 정보"만 반환 -> 보안 상 URL 노출 방지 목적
+        .get(`/api/user/mypage`, { params: { uId } })
         .then((res) => {
           const uName = res.data.uName;
           setUser({
@@ -92,6 +92,7 @@ export const UserProvider = ({ children }) => {
     // 세션 스토리지 정리
     sessionStorage.setItem("justLoggedOut", "true");
     sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("refreshToken");
     sessionStorage.removeItem("uId");
     sessionStorage.removeItem("aId");
     sessionStorage.removeItem("role");

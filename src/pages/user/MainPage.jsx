@@ -9,7 +9,7 @@
 
 import React from "react";
 import PopupNotice from "../../components/PopupNotice";
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import DirectionsMap from '@/components/features/directions/DirectionsMap';
 import GoToReservationButton from '@/components/common/GoToReservationButton';
@@ -17,8 +17,6 @@ import { background } from '@/assets/cdnImages';
 import { lobby } from '@/assets/images/index';
 import Footer from '@/components/layout/Footer';
 import Spacer from '@/components/common/Spacer';
-
-import { getAllNoticeEvents } from '@/api/noticeEvent'; // axios api 호출 추가 -> 데이터 수신 (이벤트 팝업)
 
 import Container from '@/components/layout/Container';
 import IntroSection from '@/components/mainSection/IntroSection';
@@ -29,8 +27,6 @@ import ReviewSection from "@/components/mainSection/ReviewSection";
 
 const MainPage = () => {
   const { search } = useLocation();
-  const [popupList, setPopupList] = useState([]);
-  const [showPopup, setShowPopup] = useState(true);    // 이벤트 팝업 최초 한번만 띄우기
 
   useEffect(() => {
     const params = new URLSearchParams(search);
@@ -41,46 +37,11 @@ const MainPage = () => {
     }
   }, [search]);
 
-
-  // 공지사항 데이터 받아오기 (이벤트 팝업)
-  useEffect(() => {
-    const fetchPopupData = async () => {
-      try {
-        const data = await getAllNoticeEvents();
-        //setPopupList(data.slice(0, 2));
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchPopupData();
-  }, []);
-
   return (
     <>
       <PopupNotice />  {/* 추가 - 팝업 컴포넌트 */}
 
       <div className="h-screen overflow-y-scroll snap-y snap-mandatory scroll-smooth bg-white">
-
-        {/* 기존 팝업 모달 유지 */}
-        {showPopup && popupList.length > 0 && (
-          <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-8 rounded shadow-lg relative w-1/2">
-
-              <button onClick={() => setShowPopup(false)} className="absolute top-2 right-2 text-gray-500 font-bold">
-                X
-              </button>
-              {popupList.map((item) => (
-                <div key={item.neId} className="mb-4">
-                  <h3 className="font-bold text-lg">{item.neTitle} ({item.neType})</h3>
-                  <p className="text-gray-700">{item.neContent}</p>
-                  {item.neImageUrl && (
-                    <img src={item.neImageUrl} alt={item.neTitle} className="mt-2 max-h-60 mx-auto" />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Hero Section */}
         <section

@@ -13,20 +13,20 @@ const NoticeEventCard = ({ item }) => {
   return (
     <div className="border rounded-lg shadow p-4 mb-4">
       <div className="flex items-baseline justify-between h-10 mb-4">
-        <h3 className="font-bold text-xl mb-2">{item.neTitle} </h3>
-        <span className="text-gray-500">{item.neType}</span>
+        <h3 className="font-bold text-xl mb-2">{item.title} </h3>
+        <span className="text-gray-500">{item.noticeType}</span>
       </div>
-      <p className="text-gray-700 mb-2">{item.neContent}</p>
-      {item.neImageUrl && (
+      <p className="text-gray-700 mb-2">{item.content}</p>
+      {item.imageUrl && (
         <img
-          src={item.neImageUrl}
-          alt={item.neTitle}
+          src={item.imageUrl}
+          alt={item.title}
           className="max-h-64 mx-auto my-2 rounded"
         />
       )}
-      {item.neType === "EVENT" && item.neStartDate && item.neEndDate && (
+      {item.noticeType === "EVENT" && item.startAt && item.endAt && (
         <p className="text-sm text-gray-500">
-          이벤트 기간: {item.neStartDate} ~ {item.neEndDate}
+          이벤트 기간: {item.startAt} ~ {item.endAt}
         </p>
       )}
     </div>
