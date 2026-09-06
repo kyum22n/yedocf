@@ -1,0 +1,4 @@
+/* 기본적으로 모든 텍스트에 font-sans 적용 */
+body {
+    font-family: 'Pretendard Variable', sans-serif;
+}

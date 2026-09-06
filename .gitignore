@@ -1,0 +1,25 @@
+# node_modules: 의존성 라이브러리 (절대 커밋 금지)
+node_modules/
+
+# Vite 빌드 아티팩트
+dist/
+.vite/
+
+# 환경변수 파일 (민감 정보 포함)
+.env
+.env.*.local
+
+# 로그 파일 등 임시파일
+*.log
+*.tmp
+*.swo
+*.swp
+
+# 시스템 파일
+.DS_Store
+
+# VSCode 설정 (팀 정책에 따라 공유하지 않도록)
+.vscode/
+
+# ESLint 캐시
+.eslintcache

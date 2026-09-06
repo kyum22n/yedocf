@@ -1,0 +1,111 @@
+/* 앱솔루트 정중앙 배치용 */
+.absolute-center {
+    @apply absolute bottom-1/2 right-1/2 translate-x-1/2 translate-y-1/2;
+}
+
+/* 플렉스 정중앙 배치용 */
+.flex-center {
+    @apply flex items-center justify-center;
+}
+
+/* 글자 그림자용 */
+.text-shadow {
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.text-shadow-lg {
+    text-shadow: 0px 0px 6px rgba(0, 0, 0, 0.6);
+}
+
+@font-face {
+    font-family: 'SeoulHangangM';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/SeoulHangangM.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+
+
+
+
+
+
+
+
+
+/* 달력 꾸미기 */
+.react-datepicker {
+    background-color: #ffffff;
+    border: none;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(219, 219, 219, 0.35);
+}
+
+.react-datepicker__header {
+    background-color: #f7dfb1;
+    padding: 20px 0 0 0;
+    border-bottom: none;
+}
+
+.react-datepicker__current-month {
+    padding: 20px;
+    font-size: 16px;
+    color: #000;
+}
+
+.react-datepicker__day-names {
+    padding-top: 12px;
+    /* font-weight: bold; */
+    color: #ffffff;
+    font-size: 20px;
+    display: flex;
+    justify-content: space-evenly;
+    padding-bottom: 10px;
+}
+
+.react-datepicker__day {
+    color: #000;
+    border-radius: 9999px;
+    height: 50px;
+    font-size: 20px;
+}
+
+.react-datepicker__day--disabled {
+    color: #bbbbbb;
+}
+
+.react-datepicker__day--today {
+    /* color: #e21700; */
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--in-range,
+.react-datepicker__day:hover:not(.react-datepicker__day--disabled) {
+    background-color: #fa935f;
+    color: white;
+}
+
+.react-datepicker__month-container {
+    width: 100%;
+}
+
+.react-datepicker__month {
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly !important;
+}
+.react-datepicker__week {
+    width: 100%;
+  display: flex !important;
+  justify-content: space-evenly;
+}
+
+.react-datepicker__navigation{
+    border: none;
+    color: #000;
+    height: 50px;
+}

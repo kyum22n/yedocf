@@ -1,0 +1,6 @@
+@import './base.css'; /* 테일윈드 초기화용입니다. */
+@import './fonts.css'; /* 폰트 정의용입니다. */
+@import './user.css'; /* 사용자 페이지들 전용입니다. */
+@import './admin.css'; /* 관리자 페이지들 전용입니다. 'admin-'을 앞에 붙입니다. */
+@import './presets.css'; /* 자주 쓰는 스타일들을 모아둔 파일입니다. */
+ /* index.css는 이 css들을 한번에 묶어서 import하기 위해 만들었습니다. */

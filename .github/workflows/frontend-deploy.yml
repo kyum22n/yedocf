@@ -1,0 +1,53 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Create .env file
+        run: |
+          echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> .env
+
+          echo "VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}" >> .env
+          echo "VITE_GOOGLE_CLIENT_SECRET=${{ secrets.VITE_GOOGLE_CLIENT_SECRET }}" >> .env
+          echo "VITE_GOOGLE_REDIRECT_URI=${{ secrets.VITE_GOOGLE_REDIRECT_URI }}" >> .env
+
+          echo "VITE_KAKAO_API_KEY=${{ secrets.VITE_KAKAO_API_KEY }}" >> .env
+          echo "VITE_KAKAO_CLIENT_ID=${{ secrets.VITE_KAKAO_CLIENT_ID }}" >> .env
+          echo "VITE_KAKAO_REDIRECT_URI=${{ secrets.VITE_KAKAO_REDIRECT_URI }}" >> .env
+          echo "VITE_KAKAO_LOGOUT_REDIRECT_URI=${{ secrets.VITE_KAKAO_LOGOUT_REDIRECT_URI }}" >> .env
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy via SCP
+        env:
+          PRIVATE_KEY: ${{ secrets.YEDOC }}
+          HOST: ${{ secrets.FRONTEND_HOST }}
+        run: |
+          echo "$PRIVATE_KEY" > key.pem
+          chmod 600 key.pem
+
+          scp -i key.pem -o StrictHostKeyChecking=no -r dist/* ec2-user@$HOST:/home/ec2-user/frontend-dist
+
+          # SSH 접속 후 sudo 권한으로 nginx 경로에 복사
+          ssh -i key.pem -o StrictHostKeyChecking=no ec2-user@$HOST << 'EOF'
+            sudo rm -rf /usr/share/nginx/html/*
+            sudo cp -r /home/ec2-user/frontend-dist/* /usr/share/nginx/html/
+          EOF
