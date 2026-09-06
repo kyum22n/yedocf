@@ -109,10 +109,10 @@ const StatisticsDashboardPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {summary.treatmentStatistics.map((t, idx) => (
-                        <tr key={idx} className="border-t">
-                          <td className="py-1">{t.treatmentName ?? t.treatmentId}</td>
-                          <td className="py-1">{t.count ?? t.reservationCount ?? "-"}</td>
+                      {summary.treatmentStatistics.map((t) => (
+                        <tr key={t.treatmentId} className="border-t">
+                          <td className="py-1">{t.treatmentName}</td>
+                          <td className="py-1">{t.reservationCount}</td>
                         </tr>
                       ))}
                     </tbody>

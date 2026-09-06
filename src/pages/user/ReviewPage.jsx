@@ -53,7 +53,11 @@ const ReviewPage = () => {
     const [selectedReview, setSelectedReview] = useState(null);
 
     const openCreate = () => {
-        if (user?.type === "admin") {
+        if (!user) {
+            alert("로그인이 필요합니다.");
+            return;
+        }
+        if (user.type === "admin") {
             alert("일반 사용자만 리뷰를 작성할 수 있습니다.");
             return;
         }

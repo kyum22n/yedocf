@@ -11,6 +11,7 @@ import {
   CalendarDaysIcon,
   ChartBarIcon,
   StarIcon,
+  HomeIcon,
 } from '@heroicons/react/24/outline';
 
 const Sidebar = () => {
@@ -43,7 +44,10 @@ const Sidebar = () => {
         <SidebarLink to="/admin/inquiry" label="문의 관리" icon={QuestionMarkCircleIcon} />
         <SidebarLink to="/admin/reviews" label="리뷰 관리" icon={StarIcon} />
         {isSuperAdmin && (
-          <SidebarLink to="/admin/statistics" label="통계 대시보드" icon={ChartBarIcon} />
+          <>
+            <SidebarLink to="/admin/dashboard" label="대시보드" icon={HomeIcon} />
+            <SidebarLink to="/admin/statistics" label="통계" icon={ChartBarIcon} />
+          </>
         )}
 
       </nav>

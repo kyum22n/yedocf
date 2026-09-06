@@ -30,12 +30,14 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-      // '/admin'은 백엔드 API 접두사이면서 동시에 프론트 라우트(/admin, /admin/*)이기도
-      // 하므로, 이 앱이 실제로 쓰는 프론트 라우트로 들어오는 요청만 프록시에서 제외해
-      // Vite의 SPA fallback(index.html)이 대신 응답하도록 한다.
-      // 주의: 프록시 매칭은 문자열 접두사 비교라 '/adminlogin'처럼 '/admin'으로
-      // *시작만* 하는 무관한 경로도 걸리므로, 실제로 '/admin' 세그먼트인 경우만
-      // 백엔드 API 대상으로 취급한다.
+      // '/admin'은 백엔드 API 접두사이면서 동시에 프론트 라우트 트리(/admin, /admin/*)이기도
+      // 하다. 심지어 '/admin/dashboard'처럼 프론트 라우트와 백엔드 API 경로가 문자열이
+      // 완전히 같은 경우도 있어(Dashboard 도메인), 경로만으로는 구분이 불가능하다.
+      // 그래서 요청이 "브라우저가 페이지를 열려는 문서 탐색"인지 "axios가 데이터를
+      // 가져오는 API 호출"인지를 헤더로 구분한다 — 문서 탐색이면 Vite의 SPA
+      // fallback(index.html)이 응답하도록 프록시를 건너뛰고, 그 외(API 호출)는 백엔드로
+      // 프록시한다. ('/adminlogin'처럼 '/admin'으로 시작만 하는 무관한 경로도 이 프록시
+      // 컨텍스트에 걸리므로 먼저 걸러낸다.)
       '/admin': {
         target: 'http://localhost:8080',
         changeOrigin: true,
@@ -47,21 +49,13 @@ export default defineConfig({
             return req.url; // 예: /adminlogin — 백엔드 API가 아님
           }
 
-          const frontendAdminRoutes = [
-            '/admin',
-            '/admin/reservations',
-            '/admin/staff',
-            '/admin/inquiry',
-            '/admin/noticeManage',
-            '/admin/consultations',
-            '/admin/treatments',
-            '/admin/staff-schedules',
-            '/admin/statistics',
-            '/admin/reviews',
-          ];
-          if (frontendAdminRoutes.includes(path)) {
-            return req.url;
+          const accept = req.headers['accept'] || '';
+          const isBrowserNavigation =
+            req.headers['sec-fetch-mode'] === 'navigate' || accept.includes('text/html');
+          if (isBrowserNavigation) {
+            return req.url; // 브라우저 주소창/새로고침 등 페이지 탐색 — SPA fallback에 맡긴다
           }
+          // 그 외는 axios 등 API 호출 — 프록시 진행(undefined 반환)
         },
       },
       '/notices': {

@@ -15,6 +15,7 @@ import TreatmentManagePage from './pages/admin/TreatmentManagePage';
 import StaffScheduleManagePage from './pages/admin/StaffScheduleManagePage';
 import StatisticsDashboardPage from './pages/admin/StatisticsDashboardPage';
 import ReviewManagePage from './pages/admin/ReviewManagePage';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 
 import NoticeEventPage from './pages/user/NoticeEventPage';
 import InquiryManagePage from './pages/admin/InquiryManagePage';
@@ -47,6 +48,7 @@ function App() {
           <Route path="staff-schedules" element={<StaffScheduleManagePage />} />
           <Route path="statistics" element={<StatisticsDashboardPage />} />
           <Route path="reviews" element={<ReviewManagePage />} />
+          <Route path="dashboard" element={<AdminDashboardPage />} />
         </Route>
 
         {/* 공지사항 / 이벤트 탭 추가 */}

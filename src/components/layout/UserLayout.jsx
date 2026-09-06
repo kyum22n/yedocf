@@ -50,10 +50,9 @@ const UserLayout = () => {
         <Route path="/notice" element={<NoticeEventPage />} />
         <Route path="/inquiry" element={<InquiryPage />} />
         <Route path="/consultation" element={<ProtectedRoute><ConsultationPage /></ProtectedRoute>} />
-        {/* 계약상 GET /reviews/**는 공개 조회를 의도하지만 SecurityConfig가 아직 갱신되지
-            않아 실제로는 인증이 필요하다(docs/api-contract.md §13 참고) — 백엔드가
-            permitAll로 열어주면 ProtectedRoute를 제거할 것 */}
-        <Route path="/review" element={<ProtectedRoute><ReviewPage /></ProtectedRoute>} />
+        {/* GET /reviews/**는 permitAll(비로그인 조회 가능) — 작성/수정/삭제만 로그인 필요,
+            ReviewPage 내부에서 각 액션 시점에 가드한다 */}
+        <Route path="/review" element={<ReviewPage />} />
       </Routes>
       {!shouldHideFooter && <Footer />}
     </>

@@ -10,6 +10,7 @@ import InputField from "@/components/common/InputField";
 import Dropdown from "@/components/common/Dropdown";
 import Button from "@/components/common/Button";
 import Modal from "@/components/common/Modal";
+import TimeSelectorSelect from "@/components/admin/TimeSelectorSelect";
 import { useState, useEffect } from "react";
 import axiosInstance from "@/api/axiosInstance";
 import { useUser } from "@/contexts/UserProvider";
@@ -20,6 +21,11 @@ const statusOptions = [
   { value: "COMPLETED", label: "상담 완료" },
   { value: "CONVERTED", label: "예약 전환됨" },
   { value: "CANCELED", label: "취소" },
+];
+
+const reservationStatusOptions = [
+  { value: "PENDING", label: "대기" },
+  { value: "CONFIRMED", label: "확정" },
 ];
 
 const ConsultationManagePage = () => {
@@ -48,7 +54,12 @@ const ConsultationManagePage = () => {
 
   const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
   const [convertMemo, setConvertMemo] = useState("");
-  const [convertReservationId, setConvertReservationId] = useState("");
+  const [convertForm, setConvertForm] = useState({
+    reservationDate: "",
+    reservationTime: "",
+    reservationStatus: "CONFIRMED",
+  });
+  const [isConverting, setIsConverting] = useState(false);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
@@ -75,24 +86,41 @@ const ConsultationManagePage = () => {
   };
 
   const handleConvert = async () => {
-    if (!convertReservationId) {
-      alert("먼저 예약 관리에서 해당 회원의 예약을 등록한 뒤, 그 예약 ID를 입력해주세요.");
+    if (!convertForm.reservationDate || !convertForm.reservationTime) {
+      alert("예약 날짜와 시간을 선택해주세요.");
       return;
     }
 
     try {
+      setIsConverting(true);
+
+      // ① 예약 등록 — 응답으로 실제 생성된 reservationId를 받는다
+      const registerRes = await axiosInstance.post("/admin/reservations/register", {
+        uId: selectedConsultation.uId,
+        treatmentId: selectedConsultation.treatmentId,
+        adminId: user?.adminId,
+        reservationDate: convertForm.reservationDate,
+        reservationTime: convertForm.reservationTime,
+        reservationStatus: convertForm.reservationStatus,
+      });
+      const reservationId = registerRes.data;
+
+      // ② 그 reservationId로 상담을 예약에 링크 (상담 상태는 서버가 자동으로 CONVERTED 처리)
       await axiosInstance.put("/admin/consultations/convert", {
         consultationId: selectedConsultation.consultationId,
-        reservationId: Number(convertReservationId),
+        reservationId,
         adminId: user?.adminId,
         consultationMemo: convertMemo,
       });
+
       alert("예약으로 전환되었습니다.");
       fetchConsultations();
       setIsConvertModalOpen(false);
     } catch (error) {
       console.error("예약 전환 실패", error);
       alert(error.response?.data?.message || "예약 전환에 실패했습니다.");
+    } finally {
+      setIsConverting(false);
     }
   };
 
@@ -145,7 +173,16 @@ const ConsultationManagePage = () => {
                       {c.consultationStatus !== "CONVERTED" && c.consultationStatus !== "CANCELED" && (
                         <Button
                           variant="primary"
-                          onClick={() => { setSelectedConsultation(c); setConvertMemo(""); setConvertReservationId(""); setIsConvertModalOpen(true); }}
+                          onClick={() => {
+                            setSelectedConsultation(c);
+                            setConvertMemo("");
+                            setConvertForm({
+                              reservationDate: c.preferredDate || "",
+                              reservationTime: c.preferredTime || "",
+                              reservationStatus: "CONFIRMED",
+                            });
+                            setIsConvertModalOpen(true);
+                          }}
                         >
                           예약 전환
                         </Button>
@@ -193,29 +230,40 @@ const ConsultationManagePage = () => {
           isOpen={isConvertModalOpen}
           onClose={() => setIsConvertModalOpen(false)}
           title="예약으로 전환"
-          actionLabel="전환"
-          onAction={handleConvert}
+          actionLabel={isConverting ? "전환 중..." : "전환"}
+          onAction={isConverting ? undefined : handleConvert}
         >
           <p className="text-sm text-gray-700 mb-2">
-            상담 <strong>{selectedConsultation?.consultationId}</strong>을(를) 예약으로 전환합니다.
-            먼저 "예약 관리"에서 이 회원의 예약을 등록한 뒤, 그 예약 ID를 아래에 입력하세요.
+            상담 <strong>{selectedConsultation?.consultationId}</strong>의 희망 일정으로 예약을 등록하고,
+            이 상담을 그 예약에 연결합니다. 필요하면 날짜/시간을 조정할 수 있습니다.
           </p>
-          <InputField
-            name="convertReservationId"
-            placeholder="예약 ID"
-            type="number"
-            variant="admin"
-            value={convertReservationId}
-            onChange={(e) => setConvertReservationId(e.target.value)}
-            className="mb-2"
-          />
-          <InputField
-            name="convertMemo"
-            placeholder="전환 메모"
-            variant="admin"
-            value={convertMemo}
-            onChange={(e) => setConvertMemo(e.target.value)}
-          />
+          <div className="space-y-2">
+            <InputField
+              name="reservationDate"
+              type="date"
+              variant="admin"
+              value={convertForm.reservationDate}
+              onChange={(e) => setConvertForm((prev) => ({ ...prev, reservationDate: e.target.value, reservationTime: "" }))}
+            />
+            <TimeSelectorSelect
+              selectedDate={convertForm.reservationDate}
+              selectedTime={convertForm.reservationTime}
+              onSelect={(time) => setConvertForm((prev) => ({ ...prev, reservationTime: time }))}
+              labelHidden={true}
+            />
+            <Dropdown
+              value={convertForm.reservationStatus}
+              onChange={(e) => setConvertForm((prev) => ({ ...prev, reservationStatus: e.target.value }))}
+              options={reservationStatusOptions}
+            />
+            <InputField
+              name="convertMemo"
+              placeholder="전환 메모"
+              variant="admin"
+              value={convertMemo}
+              onChange={(e) => setConvertMemo(e.target.value)}
+            />
+          </div>
         </Modal>
 
         {/* 삭제 모달 */}
