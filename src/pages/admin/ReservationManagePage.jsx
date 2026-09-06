@@ -15,6 +15,7 @@ import Modal from "@/components/common/Modal";
 import TimeSelectorSelect from "@/components/admin/TimeSelectorSelect";
 import { useState, useEffect } from "react";
 import axiosInstance from "@/api/axiosInstance";
+import { useUser } from "@/contexts/UserProvider";
 
 const statusOptions = [
   { value: "PENDING", label: "대기" },
@@ -25,6 +26,7 @@ const statusOptions = [
 ];
 
 const ReservationManagePage = () => {
+  const { user } = useUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [userId, setUserId] = useState("");
@@ -57,7 +59,7 @@ const ReservationManagePage = () => {
 
   const handleStatusChange = (reservationId, reservationStatus) => {
     axiosInstance
-      .put(`/admin/reservations/status/update`, { reservationId, reservationStatus })
+      .put(`/admin/reservations/status/update`, { reservationId, adminId: user?.adminId, reservationStatus })
       .then(() => {
         setReservations((prev) =>
           prev.map((r) => (r.reservationId === reservationId ? { ...r, reservationStatus } : r))
@@ -190,6 +192,7 @@ const ReservationManagePage = () => {
                 {
                   uId: userId,
                   treatmentId: Number(treatmentId),
+                  adminId: user?.adminId,
                   reservationDate: selectedDate,
                   reservationTime: selectedTime,
                   reservationStatus: status,
@@ -271,6 +274,7 @@ const ReservationManagePage = () => {
                 reservationId: selectedReservation.reservationId,
                 uId: selectedReservation.uId,
                 treatmentId: selectedReservation.treatmentId,
+                adminId: user?.adminId,
                 reservationDate: selectedReservation.reservationDate,
                 reservationTime: selectedReservation.reservationTime,
                 reservationStatus: selectedReservation.reservationStatus,

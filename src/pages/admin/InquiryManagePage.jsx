@@ -12,8 +12,10 @@ import Modal from "@/components/common/Modal";
 import { formatDateTime } from "@/constants/dateUtils";
 import { useState, useEffect } from "react";
 import axiosInstance from "@/api/axiosInstance";
+import { useUser } from "@/contexts/UserProvider";
 
 const InquiryManagePage = () => {
+    const { user } = useUser();
     // 상태 관리
     const [inquiries, setInquiries] = useState([]);
     const [selectedInquiry, setSelectedInquiry] = useState(null);
@@ -39,6 +41,7 @@ const InquiryManagePage = () => {
         try {
             await axiosInstance.post(`/admin/inquiries/answers/register`, {
                 inquiryId: selectedInquiry.inquiryId,
+                adminId: user?.adminId,
                 answerContent,
             });
 

@@ -11,6 +11,7 @@ export const UserProvider = ({ children }) => {
     const token = sessionStorage.getItem("accessToken");
     const uId = sessionStorage.getItem("uId");
     const aId = sessionStorage.getItem("aId");
+    const adminId = sessionStorage.getItem("adminId");
     const role = sessionStorage.getItem("role");
 
     if (!token) {
@@ -22,6 +23,7 @@ export const UserProvider = ({ children }) => {
     if (aId && role) {
       setUser({
         id: aId,
+        adminId: adminId ? Number(adminId) : null,
         name: null,
         token,
         role,
@@ -60,9 +62,10 @@ export const UserProvider = ({ children }) => {
   }, []);
 
   // 로그인 함수 (로그인 시 호출)
-  const loginUser = ({ id, token, role = "USER", type = "user" }) => {
+  const loginUser = ({ id, adminId, token, role = "USER", type = "user" }) => {
     setUser({
       id,
+      adminId: adminId ?? null,
       name: null, // 이름은 다시 불러올 수도 있음
       token,
       role,
@@ -75,6 +78,9 @@ export const UserProvider = ({ children }) => {
 
     if (type === "admin") {
       sessionStorage.setItem("aId", id);
+      if (adminId != null) {
+        sessionStorage.setItem("adminId", adminId);
+      }
     } else {
       sessionStorage.setItem("uId", id);
     }
@@ -95,6 +101,7 @@ export const UserProvider = ({ children }) => {
     sessionStorage.removeItem("refreshToken");
     sessionStorage.removeItem("uId");
     sessionStorage.removeItem("aId");
+    sessionStorage.removeItem("adminId");
     sessionStorage.removeItem("role");
     sessionStorage.removeItem("loginProvider");
 

@@ -18,7 +18,7 @@ const AdminLoginPage = () => {
     const token = sessionStorage.getItem("accessToken");
     const role = sessionStorage.getItem("role");
 
-    if (token && role === "ADMIN") {
+    if (token && (role === "ADMIN" || role === "SUPERADMIN")) {
       navigate("/admin");
     }
   }, [navigate]);
@@ -42,17 +42,16 @@ const AdminLoginPage = () => {
         adminPassword: form.password,
       });
 
-      const { accessToken, userId } = response.data;
+      const { accessToken, adminId, adminLoginId, adminRole } = response.data;
       if (!accessToken) {
         throw new Error("로그인 실패 : 토큰을 받지 못했습니다.");
       }
 
-      // 백엔드는 로그인 응답에 권한(role)을 내려주지 않는다 — 실제 권한 검사는
-      // 서버가 JWT로 각 관리자 API에서 수행하며, 프론트는 로그인 여부만 관리한다.
       loginUser({
-        id: userId,
+        id: adminLoginId,
+        adminId,
         token: accessToken,
-        role: "ADMIN",
+        role: adminRole,
         type: "admin",
       });
 
