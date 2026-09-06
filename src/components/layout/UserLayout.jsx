@@ -24,6 +24,8 @@ import FindAccountPage from '@/pages/user/FindAccountPage';
 import ReservationPage from '@/pages/user/ReservationPage';
 import NoticeEventPage from '@/pages/user/NoticeEventPage';
 import InquiryPage from '@/pages/user/InquiryPage';
+import ConsultationPage from '@/pages/user/ConsultationPage';
+import ReviewPage from '@/pages/user/ReviewPage';
 
 const UserLayout = () => {
   const location = useLocation();
@@ -47,6 +49,11 @@ const UserLayout = () => {
         <Route path="/face" element={<FacePage />} />
         <Route path="/notice" element={<NoticeEventPage />} />
         <Route path="/inquiry" element={<InquiryPage />} />
+        <Route path="/consultation" element={<ProtectedRoute><ConsultationPage /></ProtectedRoute>} />
+        {/* 계약상 GET /reviews/**는 공개 조회를 의도하지만 SecurityConfig가 아직 갱신되지
+            않아 실제로는 인증이 필요하다(docs/api-contract.md §13 참고) — 백엔드가
+            permitAll로 열어주면 ProtectedRoute를 제거할 것 */}
+        <Route path="/review" element={<ProtectedRoute><ReviewPage /></ProtectedRoute>} />
       </Routes>
       {!shouldHideFooter && <Footer />}
     </>

@@ -53,6 +53,11 @@ export default defineConfig({
             '/admin/staff',
             '/admin/inquiry',
             '/admin/noticeManage',
+            '/admin/consultations',
+            '/admin/treatments',
+            '/admin/staff-schedules',
+            '/admin/statistics',
+            '/admin/reviews',
           ];
           if (frontendAdminRoutes.includes(path)) {
             return req.url;

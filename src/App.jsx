@@ -10,6 +10,11 @@ import UserManagePage from './pages/admin/UserManagePage';
 import ReservationManagePage from './pages/admin/ReservationManagePage';
 import NoticeEventManagePage from './pages/admin/NoticeEventManagePage';
 import StaffManagePage from './pages/admin/StaffManagePage';
+import ConsultationManagePage from './pages/admin/ConsultationManagePage';
+import TreatmentManagePage from './pages/admin/TreatmentManagePage';
+import StaffScheduleManagePage from './pages/admin/StaffScheduleManagePage';
+import StatisticsDashboardPage from './pages/admin/StatisticsDashboardPage';
+import ReviewManagePage from './pages/admin/ReviewManagePage';
 
 import NoticeEventPage from './pages/user/NoticeEventPage';
 import InquiryManagePage from './pages/admin/InquiryManagePage';
@@ -37,6 +42,11 @@ function App() {
           <Route path="staff" element={<StaffManagePage />} />
           <Route path="inquiry" element={<InquiryManagePage />} />
           <Route path="noticeManage" element={<NoticeEventManagePage />} />
+          <Route path="consultations" element={<ConsultationManagePage />} />
+          <Route path="treatments" element={<TreatmentManagePage />} />
+          <Route path="staff-schedules" element={<StaffScheduleManagePage />} />
+          <Route path="statistics" element={<StatisticsDashboardPage />} />
+          <Route path="reviews" element={<ReviewManagePage />} />
         </Route>
 
         {/* 공지사항 / 이벤트 탭 추가 */}

@@ -33,6 +33,16 @@ const Header = () => {
         }
     }
 
+    const handleConsultationClick = () => {
+        if (!user) {
+            alert('로그인이 필요합니다.');
+            navigate('/login');
+        }
+        else {
+            navigate('/consultation');
+        }
+    }
+
 
     return (
         <>
@@ -47,7 +57,7 @@ const Header = () => {
 
                     {/* 네비게이션 */}
                     <nav className="absolute-center flex-center w-full">
-                        <div className="flex gap-1 h-16 w-2/5 justify-between max-w-[1100px]">
+                        <div className="flex gap-1 h-16 justify-between max-w-[1300px]">
                             <Link to="/?scrollTo=directions" className="h-16 text-lg font-bold flex-center whitespace-nowrap" title='오시는 길'>
                                 오시는 길
                             </Link>
@@ -66,9 +76,19 @@ const Header = () => {
                             <Link to="/notice" className="h-16 text-lg font-bold flex-center whitespace-nowrap" title='공지사항'>
                                 공지사항
                             </Link>
+                            <Link to="/review" className="h-16 text-lg font-bold flex-center whitespace-nowrap" title='이용후기'>
+                                이용후기
+                            </Link>
                             <Link to="/inquiry" className="h-16 text-lg font-bold flex-center whitespace-nowrap" title='1:1 문의'>
                                 1:1 문의
                             </Link>
+                        <button
+                            onClick={handleConsultationClick}
+                            type="button"
+                            className="h-16 text-lg font-bold flex-center whitespace-nowrap" title='상담신청'
+                        >
+                            상담신청
+                        </button>
                         <button
                             onClick={handleReservationClick}
                             type="button"

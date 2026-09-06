@@ -6,6 +6,11 @@ import {
   BookmarkSquareIcon,
   InformationCircleIcon,
   QuestionMarkCircleIcon,
+  ChatBubbleLeftRightIcon,
+  BeakerIcon,
+  CalendarDaysIcon,
+  ChartBarIcon,
+  StarIcon,
 } from '@heroicons/react/24/outline';
 
 const Sidebar = () => {
@@ -29,8 +34,17 @@ const Sidebar = () => {
         )}
         <SidebarLink to="/admin" label="사용자 관리" icon={UsersIcon} />
         <SidebarLink to="/admin/reservations" label="예약 관리" icon={BookmarkSquareIcon} />
+        <SidebarLink to="/admin/consultations" label="상담 관리" icon={ChatBubbleLeftRightIcon} />
+        <SidebarLink to="/admin/treatments" label="진료항목/카테고리 관리" icon={BeakerIcon} />
+        {isSuperAdmin && (
+          <SidebarLink to="/admin/staff-schedules" label="직원 근무일정 관리" icon={CalendarDaysIcon} />
+        )}
         <SidebarLink to="/admin/noticeManage" label="공지사항/이벤트 관리" icon={InformationCircleIcon} />
         <SidebarLink to="/admin/inquiry" label="문의 관리" icon={QuestionMarkCircleIcon} />
+        <SidebarLink to="/admin/reviews" label="리뷰 관리" icon={StarIcon} />
+        {isSuperAdmin && (
+          <SidebarLink to="/admin/statistics" label="통계 대시보드" icon={ChartBarIcon} />
+        )}
 
       </nav>
 
