@@ -50,9 +50,7 @@ const MyPage = () => {
         if (!window.confirm("정말 회원 탈퇴하시겠습니까?")) return;
 
         try {
-            const uId = sessionStorage.getItem("uId");
-
-            await axiosInstance.delete(`/api/user/withdraw`, { params: { uId } });
+            await axiosInstance.delete(`/api/user/withdraw`);
 
             alert("회원 탈퇴가 완료되었습니다.");
             logoutUser(); // 유저 상태 초기화
@@ -65,6 +63,11 @@ const MyPage = () => {
 
     // 모달 및 상태 관리
     const [userInfo, setUserInfo] = useState({ uId: "", uName: "", uEmail: "", uPhone: "", uBirth: "", uGender: "" });
+
+    const [showPwdModal, setShowPwdModal] = useState(false); // 비밀번호 변경 모달 표시 여부
+    const [currentPwd, setCurrentPwd] = useState("");
+    const [newPwd, setNewPwd] = useState("");
+    const [confirmPwd, setConfirmPwd] = useState("");
 
     const [showPhoneModal, setShowPhoneModal] = useState(false); // 전화번호 변경 모달 표시 여부
     const [newPhone, setNewPhone] = useState(""); // 전화번호 변경 입력 값
@@ -105,7 +108,7 @@ const MyPage = () => {
             });
 
         // 사용자 정보 불러오기
-        axiosInstance.get(`/api/user/mypage`, { params: { uId } })
+        axiosInstance.get(`/api/user/mypage`)
             .then((response) => {
                 setUserInfo(response.data);
             })
@@ -149,6 +152,13 @@ const MyPage = () => {
                                     <th className="text-left font-medium py-3">아이디</th>
                                     <td className="py-3">{userInfo.uId}</td>
                                     <td></td>
+                                </tr>
+                                <tr>
+                                    <th className="text-left font-medium py-3">비밀번호</th>
+                                    <td className="py-3">●●●●●●</td>
+                                    <td className="text-right">
+                                        <Button variant="secondary" onClick={() => setShowPwdModal(true)}>변경</Button>
+                                    </td>
                                 </tr>
                                 <tr>
                                     <th className="text-left font-medium py-3">이메일</th>
@@ -280,6 +290,61 @@ const MyPage = () => {
                 <Spacer size="lg" />
             </div>
 
+            {/* 비밀번호 변경 모달 */}
+            <Modal
+                isOpen={showPwdModal}
+                onClose={() => setShowPwdModal(false)}
+                title="비밀번호 변경"
+                actionLabel="변경"
+                onAction={async () => {
+                    if (!currentPwd || !newPwd || !confirmPwd) {
+                        alert("모든 항목을 입력해주세요.");
+                        return;
+                    }
+
+                    if (newPwd !== confirmPwd) {
+                        alert("새 비밀번호가 일치하지 않습니다.");
+                        return;
+                    }
+
+                    try {
+                        await axiosInstance.put("/api/user/password", { currentPwd, newPwd });
+
+                        alert("비밀번호가 변경되었습니다.");
+                        setShowPwdModal(false);
+                        setCurrentPwd("");
+                        setNewPwd("");
+                        setConfirmPwd("");
+                    } catch (error) {
+                        console.error("비밀번호 변경 실패", error);
+                        const message = error.response?.data?.message;
+                        alert(message ? `변경 실패: ${message}` : "비밀번호 변경에 실패했습니다.");
+                    }
+                }}
+            >
+                <input
+                    type="password"
+                    placeholder="현재 비밀번호"
+                    className="w-full border p-2 rounded mb-3"
+                    value={currentPwd}
+                    onChange={(e) => setCurrentPwd(e.target.value)}
+                />
+                <input
+                    type="password"
+                    placeholder="새 비밀번호"
+                    className="w-full border p-2 rounded mb-3"
+                    value={newPwd}
+                    onChange={(e) => setNewPwd(e.target.value)}
+                />
+                <input
+                    type="password"
+                    placeholder="새 비밀번호 확인"
+                    className="w-full border p-2 rounded"
+                    value={confirmPwd}
+                    onChange={(e) => setConfirmPwd(e.target.value)}
+                />
+            </Modal>
+
             {/* 전화번호 변경 모달 */}
             <Modal
                 isOpen={showPhoneModal}
@@ -288,10 +353,7 @@ const MyPage = () => {
                 actionLabel="변경"
                 onAction={async () => {
                     try {
-                        const uId = sessionStorage.getItem("uId");
-
                         await axiosInstance.put("/api/user/mypage/update", {
-                            uId,
                             uName: userInfo.uName,
                             uPhone: newPhone,
                             uBirth: userInfo.uBirth,
@@ -301,7 +363,7 @@ const MyPage = () => {
                         alert("핸드폰 번호가 변경되었습니다.");
 
                         // 서버에서 최신 userInfo 다시 가져오기 = 실시간 변경
-                        const updatedUserInfo = await axiosInstance.get(`/api/user/mypage`, { params: { uId } });
+                        const updatedUserInfo = await axiosInstance.get(`/api/user/mypage`);
 
                         setUserInfo(updatedUserInfo.data);
 

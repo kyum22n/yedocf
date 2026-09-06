@@ -204,6 +204,11 @@ const ReservationManagePage = () => {
               resetForm();
             } catch (err) {
               console.error("예약 추가 실패:", err);
+              if (err.response?.status === 409) {
+                alert("해당 회원은 그 날짜/시간에 이미 예약이 있습니다.");
+              } else {
+                alert(err.response?.data?.message || "예약 추가에 실패했습니다.");
+              }
             }
           }}
         >
@@ -284,6 +289,11 @@ const ReservationManagePage = () => {
               setIsEditModalOpen(false);
             } catch (err) {
               console.error("예약 변경 실패:", err);
+              if (err.response?.status === 409) {
+                alert("해당 회원은 그 날짜/시간에 이미 예약이 있습니다.");
+              } else {
+                alert(err.response?.data?.message || "예약 변경에 실패했습니다.");
+              }
             }
           }}
         >

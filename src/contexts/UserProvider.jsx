@@ -36,7 +36,7 @@ export const UserProvider = ({ children }) => {
     // 일반 사용자 처리
     if (uId) {
       axiosInstance
-        .get(`/api/user/mypage`, { params: { uId } })
+        .get(`/api/user/mypage`)
         .then((res) => {
           const uName = res.data.uName;
           setUser({

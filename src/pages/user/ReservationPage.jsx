@@ -16,6 +16,7 @@ const ReservationPage = () => {
     const [selectedItem, setSelectedItem] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [treatments, setTreatments] = useState([]);
+    const [disabledTimes, setDisabledTimes] = useState([]);
 
     const { user } = useUser();
     const navigate = useNavigate();
@@ -54,6 +55,20 @@ const ReservationPage = () => {
         }
     }, [navigate]);
 
+    // 선택한 날짜의 예약 마감 시간대 조회
+    useEffect(() => {
+        if (!selectedDate) {
+            setDisabledTimes([]);
+            return;
+        }
+
+        const dateStr = selectedDate.toLocaleDateString("sv-SE");
+        axiosInstance
+            .get("/reservations/disabled-times", { params: { reservationDate: dateStr } })
+            .then((res) => setDisabledTimes(res.data))
+            .catch((err) => console.error("예약 마감 시간대 조회 실패:", err));
+    }, [selectedDate]);
+
     const handleSubmit = async () => {
         if (!selectedDate || !selectedTime || !selectedItem) {
             alert("모든 항목을 선택해주세요.");
@@ -80,7 +95,11 @@ const ReservationPage = () => {
             navigate("/mypage");
         } catch (error) {
             console.error("예약 실패:", error);
-            alert(error.response?.data?.message || "예약에 실패했습니다.");
+            if (error.response?.status === 409) {
+                alert("이미 다른 예약이 있는 시간입니다. 다른 시간을 선택해주세요.");
+            } else {
+                alert(error.response?.data?.message || "예약에 실패했습니다.");
+            }
         } finally {
             setIsLoading(false);
         }
@@ -98,11 +117,11 @@ const ReservationPage = () => {
                             selectedDate={selectedDate}
                             onChange={(date) => setSelectedDate(date)}
                         />
-                        {/* NOTE: 예약 마감 시간대 조회 API가 계약에 없어 disabledTimes는 항상 비어있음 */}
                         <TimeSelector
                             selectedDate={selectedDate}
                             selectedTime={selectedTime}
                             onSelect={(time) => setSelectedTime(time)}
+                            disabledTimes={disabledTimes}
                         />
                     </div>
 
