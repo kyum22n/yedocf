@@ -169,7 +169,7 @@ const LoginPage = () => {
                 {/* 소셜 로그인 버튼 */}
                 <div className="flex justify-around mt-5 flex-col gap-2 w-[90%] max-w-sm">
                     <SocialButton platform="kakao" onClick={handleKakaoLogin} />
-                    {/* <SocialButton platform="google" onClick={handleGoogleLogin} /> */}
+                    <SocialButton platform="google" onClick={handleGoogleLogin} />
                 </div>
             </div>
         </div>
