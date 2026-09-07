@@ -1,15 +1,38 @@
-# React + Vite
+# yedocf
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+병원(피부/성형 클리닉) 예약 서비스의 프론트엔드. 팀 프로젝트 원본(`kyum2n/yedocf`)을 기반으로 화면을 정리하고,
+백엔드([`kyum22n/yedocb`](https://github.com/kyum22n/yedocb))의 확장된 도메인(상담/진료항목/통계/리뷰)에 맞춰
+신규 화면을 추가한 개인 포트폴리오 프로젝트입니다.
 
-Currently, two official plugins are available:
+- **라이브**: https://yedocf.vercel.app
+- **백엔드 저장소**: [`kyum22n/yedocb`](https://github.com/kyum22n/yedocb)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 기술 스택
 
-## Expanding the ESLint configuration
+- React + Vite, React Router, Tailwind CSS
+- axios (단일 클라이언트, JWT 토큰 자동 첨부)
+- Vitest + React Testing Library
+- 배포: [Vercel](https://vercel.com)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 주요 화면
+
+- **사용자**: 메인/공지·이벤트/이용후기/1:1 문의/상담신청/예약/마이페이지, Google·Kakao 소셜 로그인
+- **관리자**: 회원/예약/상담/진료항목·카테고리/공지/문의/리뷰 관리, 통계 대시보드
+
+## 로컬 실행
+
+```bash
+npm install
+npm run dev      # http://localhost:5173, /api 등 백엔드 프록시는 vite.config.js 참고
+npm run build
+npm test         # Vitest
+```
+
+## 배포
+
+AWS EC2 + nginx 정적 서빙을 **Vercel**로 전환했습니다. SPA 라우팅(`vercel.json`), 환경변수(OAuth client id/redirect uri,
+API base URL 등) 구성과 전환 과정의 트러블슈팅은 백엔드 저장소의
+[`docs/deployment-migration.md`](https://github.com/kyum22n/yedocb/blob/main/docs/deployment-migration.md)에 기록되어 있습니다.
 
 ## 알려진 제한사항
 
