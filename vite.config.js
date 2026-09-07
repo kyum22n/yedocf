@@ -17,7 +17,7 @@ export default defineConfig({
   server: {
     // 확정된 docs/api-contract.md 기준: User 도메인만 /api 접두사를 쓰고,
     // 나머지(Reservation/Notice/Inquiry/Admin/Consultation/Treatment/
-    // TreatmentCategory/StaffSchedule/Statistics/Dashboard/Review)는
+    // TreatmentCategory/Statistics/Dashboard/Review)는
     // 접두사 없이 루트 경로를 그대로 쓰므로 전부 프록시 대상에 포함한다.
     proxy: {
       '/api': {

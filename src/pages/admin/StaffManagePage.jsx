@@ -3,7 +3,7 @@
  * fileName       : StaffManagePage.jsx
  * author         : lkm
  * date           : 25.06.11
- * description    : 관리자 계정 관리 (Admin 도메인 — 직원 근무일정과는 별개)
+ * description    : 관리자 계정 관리 (Admin 도메인)
  * ===========================================================
  */
 
