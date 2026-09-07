@@ -57,7 +57,7 @@ const Header = () => {
 
                     {/* 네비게이션 */}
                     <nav className="absolute-center flex-center w-full">
-                        <div className="flex gap-1 h-16 justify-between max-w-[1300px]">
+                        <div className="flex gap-8 h-16 justify-between max-w-[1300px]">
                             <Link to="/?scrollTo=directions" className="h-16 text-lg font-bold flex-center whitespace-nowrap" title='오시는 길'>
                                 오시는 길
                             </Link>
